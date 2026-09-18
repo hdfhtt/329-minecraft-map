@@ -1,0 +1,11 @@
+[project]
+name = "bedrock-minedmap-local"
+version = "0.1.0"
+description = "Convert a Bedrock world with Amulet Core and render it with MinedMap"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "amulet-core==1.9.45",
+]
+
+[project.scripts]
+convert-world = "scripts.convert_world:main"

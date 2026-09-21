@@ -52,6 +52,95 @@ without converting chunks again:
 ./scripts/convert.sh --metadata-only
 ```
 
+## Update the World Map
+
+Use this procedure when a newer Bedrock world export is available. The source
+world must be a complete, closed export; do not copy it while Minecraft or a
+Bedrock server is still writing to it.
+
+### 1. Prepare the replacement world
+
+Extract the new export outside this project first. Its world directory must
+contain both `level.dat` and a `db/` directory:
+
+```sh
+NEW_WORLD=/absolute/path/to/the/extracted/world
+test -f "$NEW_WORLD/level.dat"
+test -d "$NEW_WORLD/db"
+```
+
+Replace `329/` as a complete directory. Do not merge or copy a new LevelDB
+`db/` over the old one because files removed from the new world could otherwise
+remain in the source:
+
+```sh
+rm -rf 329.new
+cp -a "$NEW_WORLD" 329.new
+test -f 329.new/level.dat
+test -d 329.new/db
+
+BACKUP="329.backup-$(date +%Y%m%d-%H%M%S)"
+mv 329 "$BACKUP"
+mv 329.new 329
+```
+
+Keep the backup until the new map has been checked. The source world, its
+archives, and local backups are data rather than project source and must not be
+committed to Git.
+
+### 2. Convert the new world
+
+Activate the project environment, then run a full conversion. Conversion
+replaces `output/java-world/`; `--metadata-only` is not sufficient for a world
+update.
+
+```sh
+. .venv/bin/activate
+./scripts/convert.sh
+```
+
+The conversion is complete when it reports `Conversion complete` and finishes
+updating the Java metadata without an error.
+
+### 3. Render a fresh viewer
+
+Remove the old generated map data so tiles from areas that no longer exist do
+not remain in the viewer, then render the replacement world:
+
+```sh
+rm -rf output/viewer/data
+./scripts/render.sh
+```
+
+This preserves the MinedMap viewer application and regenerates its terrain
+tiles, metadata, spawn location, and sign markers.
+
+### 4. Check the map locally
+
+```sh
+python3 scripts/serve.py --port 8000
+```
+
+Open <http://127.0.0.1:8000/> and check the spawn location, several known
+landmarks, the map boundaries, and some sign markers. Stop the server with
+`Ctrl-C` after verification.
+
+### 5. Publish the result
+
+The deployable static site is the complete `output/viewer/` directory. Publish
+that directory with the configured hosting process; do not publish
+`output/java-world/`, `329/`, or a world archive. The
+`output/viewer/data/processed/` directory is a local MinedMap rendering cache
+and may be excluded from uploads.
+
+Updating the map does not require a Git commit because generated output and
+world data are intentionally kept out of the repository. Commit and push only
+when the conversion scripts, rendering settings, or documentation change.
+
+For later updates, do not rely on `render-and-serve.sh` alone: it deliberately
+reuses an existing `output/java-world/`. Always run `convert.sh` explicitly
+after replacing `329/`.
+
 ## Important Limitations
 
 Conversion depends on the translation data available in the installed

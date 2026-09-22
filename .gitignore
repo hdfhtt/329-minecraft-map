@@ -3,3 +3,11 @@ __pycache__/
 scripts/__pycache__/
 output/
 tools/
+
+# Bedrock world data, archives, and backups (never commit)
+/329/
+/329.backup-*/
+/map_*.tar.gz
+
+# Python packaging metadata
+*.egg-info/

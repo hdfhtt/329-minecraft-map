@@ -72,6 +72,32 @@ The script sets the page title and copies `assets/favicon.ico` to
 the branding. Browsers cache favicons aggressively; after publishing, use a hard
 refresh or a private window to see a changed icon.
 
+## Deploy to Azure
+
+Create an Azure Static Web App with the Free plan and `Other` as its deployment
+source. Copy its deployment token from **Overview > Manage deployment token**,
+then run:
+
+```sh
+./scripts/deploy.sh
+```
+
+Paste the token at the hidden prompt. The script validates the rendered viewer,
+applies the project branding, creates a temporary deployment package, excludes
+the local `data/processed/` rendering cache, and publishes to the production
+environment. The temporary package and interactively entered token are removed
+when the script exits.
+
+For unattended use, provide the token through the environment:
+
+```sh
+SWA_CLI_DEPLOYMENT_TOKEN='your-secret-token' ./scripts/deploy.sh
+```
+
+Never commit the deployment token. Pushing source changes to Azure Repos does
+not publish the generated viewer; run `deploy.sh` whenever the rendered map or
+viewer branding changes.
+
 ## Update the World Map
 
 Use this procedure when a newer Bedrock world export is available. The source
@@ -147,11 +173,15 @@ landmarks, the map boundaries, and some sign markers. Stop the server with
 
 ### 5. Publish the result
 
-The deployable static site is the complete `output/viewer/` directory. Publish
-that directory with the configured hosting process; do not publish
-`output/java-world/`, `329/`, or a world archive. The
-`output/viewer/data/processed/` directory is a local MinedMap rendering cache
-and may be excluded from uploads.
+Deploy the refreshed viewer to Azure:
+
+```sh
+./scripts/deploy.sh
+```
+
+The script publishes `output/viewer/` without the local
+`output/viewer/data/processed/` rendering cache. It does not publish
+`output/java-world/`, `329/`, or a world archive.
 
 Updating the map does not require a Git commit because generated output and
 world data are intentionally kept out of the repository. Commit and push only

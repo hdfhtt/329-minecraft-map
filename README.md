@@ -52,6 +52,26 @@ without converting chunks again:
 ./scripts/convert.sh --metadata-only
 ```
 
+## Viewer Branding
+
+The stock MinedMap viewer ships with the title `MinedMap` and no favicon. This
+project rebrands it to **Minecraft with 329** with a custom favicon.
+
+The icon source lives at `assets/favicon.ico` and is committed to Git.
+`scripts/setup-minedmap.sh` applies the branding automatically after it installs
+the viewer, so a reinstall never loses the customization. To reapply the title
+and icon to an existing `output/viewer/` without reinstalling MinedMap:
+
+```sh
+./scripts/brand-viewer.sh
+```
+
+The script sets the page title and copies `assets/favicon.ico` to
+`output/viewer/favicon.ico`. It is idempotent and safe to run repeatedly. Edit
+`assets/favicon.ico` or the `TITLE` value in `scripts/brand-viewer.sh` to change
+the branding. Browsers cache favicons aggressively; after publishing, use a hard
+refresh or a private window to see a changed icon.
+
 ## Update the World Map
 
 Use this procedure when a newer Bedrock world export is available. The source

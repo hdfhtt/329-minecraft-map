@@ -39,4 +39,7 @@ if [[ -z "$VIEWER_ROOT" ]]; then
 fi
 cp -a "$VIEWER_ROOT"/. "$VIEWER_DIR"/
 
+# Restore the custom title and favicon over the stock MinedMap viewer.
+"$ROOT_DIR/scripts/brand-viewer.sh" "$VIEWER_DIR"
+
 echo "Installed MinedMap ${VERSION} in $BIN_DIR and $VIEWER_DIR"

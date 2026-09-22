@@ -54,23 +54,26 @@ without converting chunks again:
 
 ## Viewer Branding
 
-The stock MinedMap viewer ships with the title `MinedMap` and no favicon. This
-project rebrands it to **Minecraft with 329** with a custom favicon.
+The stock MinedMap viewer ships with the title `MinedMap`, no favicon, and
+Leaflet and renderer credits. This project rebrands it to **Minecraft with 329**
+with a custom favicon and replaces the credits with the map render timestamp.
 
 The icon source lives at `assets/favicon.ico` and is committed to Git.
-`scripts/setup-minedmap.sh` applies the branding automatically after it installs
-the viewer, so a reinstall never loses the customization. To reapply the title
-and icon to an existing `output/viewer/` without reinstalling MinedMap:
+`scripts/setup-minedmap.sh` applies the branding after it installs the viewer,
+and `scripts/render.sh` refreshes it after each successful render. To reapply the
+branding to an existing `output/viewer/` without reinstalling MinedMap:
 
 ```sh
 ./scripts/brand-viewer.sh
 ```
 
-The script sets the page title and copies `assets/favicon.ico` to
-`output/viewer/favicon.ico`. It is idempotent and safe to run repeatedly. Edit
-`assets/favicon.ico` or the `TITLE` value in `scripts/brand-viewer.sh` to change
-the branding. Browsers cache favicons aggressively; after publishing, use a hard
-refresh or a private window to see a changed icon.
+The script sets the page title, copies `assets/favicon.ico` to
+`output/viewer/favicon.ico`, removes the stock Leaflet and MinedMap credits, and
+shows the modification timestamp of `data/info.json` in Malaysia time (GMT+8).
+It is idempotent and safe to run repeatedly. Edit `assets/favicon.ico` or the
+`TITLE` value in `scripts/brand-viewer.sh` to change the branding. Browsers cache
+favicons aggressively; after publishing, use a hard refresh or a private window
+to see a changed icon.
 
 ## Deploy to Azure
 

@@ -22,6 +22,29 @@
   gap: 6px;
 }
 
+.region-label-hidden {
+  visibility: hidden;
+}
+
+.leaflet-tooltip.region-label-merged {
+  padding: 0;
+  border: 0;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.72);
+}
+
+.region-label-group {
+  display: grid;
+}
+
+.region-label-section {
+  padding: 7px 10px 8px;
+  border-left: 4px solid var(--region-color);
+}
+
+.region-label-section + .region-label-section {
+  border-top: 2px solid var(--region-color);
+}
+
 .region-label-name {
   text-align: center;
 }

@@ -90,18 +90,108 @@
 			return label;
 		};
 
-		const regionLayer = L.layerGroup(regions.map(function(region) {
-			return L.rectangle(region.bounds, {
+		const regionEntries = regions.map(function(region) {
+			const rectangle = L.rectangle(region.bounds, {
 				color: region.color,
 				fillColor: region.color,
 				fillOpacity: 0.18,
 				weight: 3,
-			}).bindTooltip(createRegionLabel(region), {
+			});
+			rectangle.bindTooltip(createRegionLabel(region), {
 				className: `region-label ${region.labelClass}`,
 				direction: 'center',
 				opacity: 1,
 				permanent: true,
 			});
+			return { region, rectangle, tooltip: rectangle.getTooltip() };
+		});
+
+		const regionLayer = L.layerGroup(regionEntries.map(function(entry) {
+			return entry.rectangle;
 		})).addTo(map);
 		overlayMaps['Regions'] = regionLayer;
+
+		const mergedTooltips = [];
+		let collisionUpdateFrame;
+
+		const labelsOverlap = function(first, second) {
+			return first.left < second.right && first.right > second.left &&
+				first.top < second.bottom && first.bottom > second.top;
+		};
+
+		const createMergedRegionLabel = function(entries) {
+			const label = document.createElement('div');
+			label.className = 'region-label-group';
+			entries.forEach(function(entry) {
+				const section = document.createElement('div');
+				section.className = `region-label-section ${entry.region.labelClass}`;
+				section.append(createRegionLabel(entry.region));
+				label.append(section);
+			});
+			return label;
+		};
+
+		const updateRegionLabels = function() {
+			collisionUpdateFrame = undefined;
+			mergedTooltips.splice(0).forEach(function(tooltip) {
+				map.removeLayer(tooltip);
+			});
+
+			const visibleEntries = regionEntries.filter(function(entry) {
+				const element = entry.tooltip.getElement();
+				if (!element) return false;
+				element.classList.remove('region-label-hidden');
+				return map.hasLayer(entry.rectangle);
+			});
+
+			const groups = visibleEntries.map(function(entry) {
+				return [entry];
+			});
+			let merged = true;
+			while (merged) {
+				merged = false;
+				for (let index = 0; index < groups.length && !merged; index += 1) {
+					for (let candidate = index + 1; candidate < groups.length; candidate += 1) {
+						const overlaps = groups[index].some(function(first) {
+							const firstBounds = first.tooltip.getElement().getBoundingClientRect();
+							return groups[candidate].some(function(second) {
+								return labelsOverlap(firstBounds, second.tooltip.getElement().getBoundingClientRect());
+							});
+						});
+						if (!overlaps) continue;
+						groups[index].push(...groups[candidate]);
+						groups.splice(candidate, 1);
+						merged = true;
+						break;
+					}
+				}
+			}
+
+			groups.filter(function(group) {
+				return group.length > 1;
+			}).forEach(function(group) {
+				group.forEach(function(entry) {
+					entry.tooltip.getElement().classList.add('region-label-hidden');
+				});
+				const center = group.reduce(function(total, entry) {
+					return total.add(map.latLngToContainerPoint(entry.rectangle.getBounds().getCenter()));
+				}, L.point(0, 0)).divideBy(group.length);
+				const tooltip = L.tooltip({
+					className: 'region-label region-label-merged',
+					direction: 'center',
+					opacity: 1,
+					permanent: true,
+					interactive: true,
+				}).setContent(createMergedRegionLabel(group)).setLatLng(map.containerPointToLatLng(center)).addTo(map);
+				mergedTooltips.push(tooltip);
+			});
+		};
+
+		const scheduleRegionLabelUpdate = function() {
+			if (collisionUpdateFrame) cancelAnimationFrame(collisionUpdateFrame);
+			collisionUpdateFrame = requestAnimationFrame(updateRegionLabels);
+		};
+
+		map.whenReady(scheduleRegionLabelUpdate);
+		map.on('zoomend moveend resize overlayadd overlayremove', scheduleRegionLabelUpdate);
 		// END 329 REGIONS

@@ -1,0 +1,29 @@
+.leaflet-tooltip.region-label {
+  padding: 7px 10px 6px;
+  background: rgba(20, 18, 16, 0.92);
+  border: 2px solid var(--region-color);
+  border-radius: 0;
+  box-shadow:
+    3px 3px 0 rgba(0, 0, 0, 0.72),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: #fffdf2;
+  font-family: ui-monospace, "Cascadia Mono", "DejaVu Sans Mono", "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
+}
+
+.region-label-estuary {
+  --region-color: #d58c2b;
+}
+
+.region-label-winterhold {
+  --region-color: #62aee0;
+}
+
+.region-label-sylvaria {
+  --region-color: #4d9b57;
+}

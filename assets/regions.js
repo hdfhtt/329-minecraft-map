@@ -63,7 +63,12 @@
 				player.addEventListener('click', function(event) {
 					event.preventDefault();
 					event.stopPropagation();
-					const isOpen = player.classList.toggle('region-player-open');
+					const isOpen = !player.classList.contains('region-player-open');
+					document.querySelectorAll('.region-player-open').forEach(function(openPlayer) {
+						openPlayer.classList.remove('region-player-open');
+						openPlayer.setAttribute('aria-expanded', 'false');
+					});
+					if (isOpen) player.classList.add('region-player-open');
 					player.setAttribute('aria-expanded', String(isOpen));
 				});
 

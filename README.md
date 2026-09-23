@@ -75,8 +75,11 @@ The script sets the page title, copies `assets/favicon.ico` to
 `output/viewer/favicon.ico`, injects the regions, removes the stock Leaflet and
 MinedMap credits, and shows the modification timestamp of `data/info.json` in
 Malaysia time (GMT+8). It is idempotent and safe to run repeatedly. Edit
-`assets/regions.js` to change region names, bounds, or colors, and edit
-`assets/regions.css` to change the labels. Edit `assets/favicon.ico` or the
+`assets/regions.js` to change region names, bounds, colors, or player heads, and edit
+`assets/regions.css` to change the labels. Add Bedrock gamertags as strings in a
+region's `players` list; heads appear below its name and show the gamertag on hover.
+The viewer tries Geyser's public skin cache for a Minecraft head, then uses the
+standard Steve head if the player or skin is unavailable. Edit `assets/favicon.ico` or the
 `TITLE` value in `scripts/brand-viewer.sh` to change the branding. Browsers cache
 favicons aggressively; after publishing, use a hard refresh or a private window
 to see a changed icon.

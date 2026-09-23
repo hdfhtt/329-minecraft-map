@@ -1,5 +1,5 @@
 .leaflet-tooltip.region-label {
-  padding: 7px 10px 6px;
+  padding: 7px 10px 8px;
   background: rgba(20, 18, 16, 0.92);
   border: 2px solid var(--region-color);
   border-radius: 0;
@@ -14,6 +14,79 @@
   line-height: 1.25;
   text-shadow: 2px 2px 0 #000;
   text-transform: uppercase;
+}
+
+.region-label-content {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.region-label-name {
+  text-align: center;
+}
+
+.region-players {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: 132px;
+  pointer-events: auto;
+}
+
+.region-player {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.region-player-head {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 253, 242, 0.7);
+  background: repeating-conic-gradient(#7f7f7f 0 25%, #555 0 50%) 50% / 8px 8px;
+  image-rendering: pixelated;
+}
+
+.region-player-head-unavailable {
+  opacity: 0.45;
+}
+
+.region-player-name {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 5px);
+  left: 50%;
+  display: none;
+  padding: 3px 5px;
+  border: 1px solid var(--region-color);
+  background: #151311;
+  color: #fffdf2;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  text-shadow: 1px 1px 0 #000;
+  text-transform: none;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.region-player:hover .region-player-name,
+.region-player:focus-visible .region-player-name,
+.region-player-open .region-player-name {
+  display: block;
+}
+
+.region-player:focus-visible {
+  outline: 1px solid #fffdf2;
+  outline-offset: 2px;
 }
 
 .region-label-estuary {

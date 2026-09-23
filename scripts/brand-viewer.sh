@@ -32,6 +32,7 @@ sed -i "s#<title>${TITLE}</title>#<title>${TITLE}</title>\n    <link rel=\"icon\
 # Install region label styles after Leaflet's stylesheet so custom tooltip rules
 # take precedence. Replace the link on each run to keep the operation idempotent.
 cp -f "$REGION_STYLE" "$VIEWER_DIR/regions.css"
+rm -f "$VIEWER_DIR/anonymous-player.svg"
 sed -i '/href="regions.css"/d' "$INDEX"
 sed -i '/leaflet-1\.9\.4\/leaflet\.css/a\    <link rel="stylesheet" href="regions.css" />' "$INDEX"
 

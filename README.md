@@ -43,8 +43,6 @@ on `convert.sh` to select another Java translation target, for example:
 ./scripts/convert.sh --java-version 1.20.4
 ```
 
-The renderer displays every non-empty sign as a map marker.
-
 If conversion completed but Java metadata needs to be regenerated, repair it
 without converting chunks again:
 
@@ -170,7 +168,7 @@ rm -rf output/viewer/data
 ```
 
 This preserves the MinedMap viewer application and regenerates its terrain
-tiles, metadata, spawn location, and sign markers.
+tiles, metadata, and spawn location.
 
 ### 4. Check the map locally
 
@@ -179,8 +177,8 @@ python3 scripts/serve.py --port 8000
 ```
 
 Open <http://127.0.0.1:8000/> and check the spawn location, several known
-landmarks, the map boundaries, and some sign markers. Stop the server with
-`Ctrl-C` after verification.
+landmarks, and the map boundaries. Stop the server with `Ctrl-C` after
+verification.
 
 ### 5. Publish the result
 

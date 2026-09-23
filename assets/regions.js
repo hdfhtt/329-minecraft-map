@@ -30,29 +30,15 @@
 				],
 			},
 		];
-		const steveAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
-
-		const getPlayerAvatar = async function(playerName) {
-			const encodedName = encodeURIComponent(playerName);
-			try {
-				const profile = await fetch(`https://api.geysermc.org/v2/xbox/xuid/${encodedName}`)
-					.then(function(response) {
-						if (!response.ok) throw new Error('Bedrock player unavailable');
-						return response.json();
-					});
-				const skin = await fetch(`https://api.geysermc.org/v2/skin/${profile.xuid}`)
-					.then(function(response) {
-						if (!response.ok) throw new Error('Bedrock skin unavailable');
-						return response.json();
-					});
-				if (skin.texture_id) {
-					return `https://mc-heads.net/avatar/${skin.texture_id}/32.png`;
-				}
-			} catch (error) {
-				// Unknown players and uncached skins use the standard Minecraft Steve head.
-			}
-
-			return steveAvatar;
+		const defaultAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
+		const playerAvatars = {
+			TheDyingStar453: 'https://mc-heads.net/avatar/8144751c9b5a461d2898907ee3e9f61e5367b42294d587b0555701e95896315/32.png',
+			ActuallyYoon: 'https://mc-heads.net/avatar/a7364c63c3e3bcac6061788d568b5f806f9e93a3ac31399cc98db6f1e70e6383/32.png',
+			'Super Zazaaaa': defaultAvatar,
+			Fitz9566: defaultAvatar,
+			CAPIK052545: defaultAvatar,
+			YVKI2566: defaultAvatar,
+			Izzatsaubri45: defaultAvatar,
 		};
 
 		const createRegionLabel = function(region) {
@@ -90,13 +76,9 @@
 						return;
 					}
 					head.dataset.fallback = 'true';
-					head.src = steveAvatar;
+					head.src = defaultAvatar;
 				});
-				getPlayerAvatar(playerName).then(function(url) {
-					head.src = url;
-				}).catch(function() {
-					head.src = steveAvatar;
-				});
+				head.src = playerAvatars[playerName] || defaultAvatar;
 
 				const playerLabel = document.createElement('span');
 				playerLabel.className = 'region-player-name';

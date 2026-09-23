@@ -52,13 +52,19 @@ without converting chunks again:
 ./scripts/convert.sh --metadata-only
 ```
 
-## Viewer Branding
+## Viewer Customization
 
 The stock MinedMap viewer ships with the title `MinedMap`, no favicon, and
 Leaflet and renderer credits. This project rebrands it to **Minecraft with 329**
 with a custom favicon and replaces the credits with the map render timestamp.
+It also adds a default-visible `Regions` overlay with named boundaries that can
+be hidden from the Leaflet layer control.
 
-The icon source lives at `assets/favicon.ico` and is committed to Git.
+The icon source lives at `assets/favicon.ico`, the Leaflet region definitions
+live at `assets/regions.js`, and their label styles live at `assets/regions.css`.
+All are committed to Git. Each region has a distinct tinted fill and a permanent
+pixel-style label.
+
 `scripts/setup-minedmap.sh` applies the branding after it installs the viewer,
 and `scripts/render.sh` refreshes it after each successful render. To reapply the
 branding to an existing `output/viewer/` without reinstalling MinedMap:
@@ -68,9 +74,11 @@ branding to an existing `output/viewer/` without reinstalling MinedMap:
 ```
 
 The script sets the page title, copies `assets/favicon.ico` to
-`output/viewer/favicon.ico`, removes the stock Leaflet and MinedMap credits, and
-shows the modification timestamp of `data/info.json` in Malaysia time (GMT+8).
-It is idempotent and safe to run repeatedly. Edit `assets/favicon.ico` or the
+`output/viewer/favicon.ico`, injects the regions, removes the stock Leaflet and
+MinedMap credits, and shows the modification timestamp of `data/info.json` in
+Malaysia time (GMT+8). It is idempotent and safe to run repeatedly. Edit
+`assets/regions.js` to change region names, bounds, or colors, and edit
+`assets/regions.css` to change the labels. Edit `assets/favicon.ico` or the
 `TITLE` value in `scripts/brand-viewer.sh` to change the branding. Browsers cache
 favicons aggressively; after publishing, use a hard refresh or a private window
 to see a changed icon.

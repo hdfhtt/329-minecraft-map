@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VIEWER_DIR="${1:-$ROOT_DIR/output/viewer}"
 ASSET="$ROOT_DIR/assets/favicon.ico"
 REGIONS="$ROOT_DIR/assets/regions.js"
+COORDINATES="$ROOT_DIR/assets/coordinates.js"
 REGION_STYLE="$ROOT_DIR/assets/regions.css"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
@@ -15,6 +16,7 @@ TITLE="Minecraft with 329"
 [[ -f "$SCRIPT" ]] || { echo "Viewer script not found: $SCRIPT" >&2; exit 1; }
 [[ -f "$ASSET" ]] || { echo "Favicon asset not found: $ASSET" >&2; exit 1; }
 [[ -f "$REGIONS" ]] || { echo "Region definitions not found: $REGIONS" >&2; exit 1; }
+[[ -f "$COORDINATES" ]] || { echo "Coordinate initialization not found: $COORDINATES" >&2; exit 1; }
 [[ -f "$REGION_STYLE" ]] || { echo "Region stylesheet not found: $REGION_STYLE" >&2; exit 1; }
 
 # Install the custom favicon alongside the viewer and remove any stale variants.
@@ -40,6 +42,10 @@ sed -i '/leaflet-1\.9\.4\/leaflet\.css/a\    <link rel="stylesheet" href="region
 # rerunning this script does not duplicate the regions.
 sed -i '/\/\/ BEGIN 329 REGIONS/,/\/\/ END 329 REGIONS/d' "$SCRIPT"
 sed -i "/const overlayMaps = {};/r $REGIONS" "$SCRIPT"
+
+# Show the initial map center before the visitor moves a mouse or touches the map.
+sed -i '/\/\/ BEGIN 329 COORDINATES/,/\/\/ END 329 COORDINATES/d' "$SCRIPT"
+sed -i "/coordControl.addTo(map);/r $COORDINATES" "$SCRIPT"
 
 # Replace the stock credits with the timestamp of the rendered map data.
 sed -i '/attribution: .*MinedMap.*,/d' "$SCRIPT"

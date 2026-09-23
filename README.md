@@ -59,7 +59,8 @@ It also adds a default-visible `Regions` overlay with named boundaries that can
 be hidden from the Leaflet layer control.
 
 The icon source lives at `assets/favicon.ico`, the Leaflet region definitions
-live at `assets/regions.js`, and their label styles live at `assets/regions.css`.
+live at `assets/regions.js`, the initial coordinate display lives at
+`assets/coordinates.js`, and the label styles live at `assets/regions.css`.
 All are committed to Git. Each region has a distinct tinted fill and a permanent
 pixel-style label.
 

@@ -18,7 +18,6 @@ fi
 mkdir -p "$VIEWER_DATA"
 "$MINEDMAP" "$JAVA_WORLD" "$VIEWER_DATA" \
   --image-format webp \
-  --sign-filter '.' \
   -j "${MINEDMAP_JOBS:-$(nproc)}"
 "$ROOT_DIR/scripts/brand-viewer.sh"
 echo "Rendered map data into $VIEWER_DATA"

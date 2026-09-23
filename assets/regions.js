@@ -44,6 +44,11 @@
 		const createRegionLabel = function(region) {
 			const label = document.createElement('div');
 			label.className = 'region-label-content';
+			label.addEventListener('click', function(event) {
+				event.preventDefault();
+				event.stopPropagation();
+				map.fitBounds(region.bounds);
+			});
 
 			const name = document.createElement('div');
 			name.className = 'region-label-name';
@@ -107,6 +112,7 @@
 				direction: 'center',
 				opacity: 1,
 				permanent: true,
+				interactive: true,
 			});
 			return { region, rectangle, tooltip: rectangle.getTooltip() };
 		});

@@ -74,7 +74,8 @@ branding to an existing `output/viewer/` without reinstalling MinedMap:
 
 The script sets the page title, copies `assets/favicon.ico` to
 `output/viewer/favicon.ico`, injects the regions, removes the stock Leaflet and
-MinedMap credits, and shows the modification timestamp of `data/info.json` in
+MinedMap credits, and shows the complete Minecraft day from `329/level.dat` in
+its own map panel alongside the modification timestamp of `data/info.json` in
 Malaysia time (GMT+8). It is idempotent and safe to run repeatedly. Edit
 `assets/regions.js` to change region names, bounds, colors, player heads, or their
 cached avatar URLs, and edit `assets/regions.css` to change the labels. Add Bedrock

@@ -137,6 +137,7 @@
 .leaflet-container .leaflet-bar,
 .leaflet-container .leaflet-control-layers,
 .leaflet-container .leaflet-control-attribution,
+.leaflet-container .world-day-control,
 .leaflet-container .leaflet-popup-content-wrapper {
   border: 2px solid var(--map-ui-color);
   border-radius: 0;
@@ -229,6 +230,15 @@
   padding: 3px 6px;
   font-family: inherit;
   font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.leaflet-container .world-day-control {
+  padding: 4px 7px;
+  font-family: inherit;
+  font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.04em;
   line-height: 1.3;

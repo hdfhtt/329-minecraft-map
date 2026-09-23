@@ -10,6 +10,8 @@ REGION_STYLE="$ROOT_DIR/assets/regions.css"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
 INFO="$VIEWER_DIR/data/info.json"
+WORLD="$ROOT_DIR/329/level.dat"
+PYTHON="$ROOT_DIR/.venv/bin/python"
 TITLE="Minecraft with 329"
 
 [[ -f "$INDEX" ]] || { echo "Viewer index not found: $INDEX" >&2; exit 1; }
@@ -51,13 +53,28 @@ sed -i "/coordControl.addTo(map);/r $COORDINATES" "$SCRIPT"
 sed -i '/attribution: .*MinedMap.*,/d' "$SCRIPT"
 sed -i '/map\.attributionControl\.setPrefix(false);/d' "$SCRIPT"
 sed -i '/map\.attributionControl\.addAttribution(/d' "$SCRIPT"
+sed -i '/\/\/ BEGIN 329 WORLD DAY/,/\/\/ END 329 WORLD DAY/d' "$SCRIPT"
 sed -i ':a;N;$!ba;s/\n\{2,\}\(\t\tconst refocus = function() {\)/\n\n\1/' "$SCRIPT"
+
+if [[ ! -x "$PYTHON" ]]; then
+  PYTHON="python3"
+fi
+
+if [[ -f "$WORLD" ]] && WORLD_DAY="$("$PYTHON" "$ROOT_DIR/scripts/world_days.py" "$WORLD" 2>/dev/null)"; then
+  DAY_ATTRIBUTION="Day ${WORLD_DAY}"
+else
+  DAY_ATTRIBUTION=""
+fi
 
 if [[ -f "$INFO" ]]; then
   ATTRIBUTION="$(LC_ALL=C TZ=Asia/Kuala_Lumpur date -r "$INFO" '+%B %-d, %Y at %-I:%M %p GMT+8')"
   sed -i "s#\t\tconst refocus = function() {#\t\tmap.attributionControl.setPrefix(false);\n\t\tmap.attributionControl.addAttribution('${ATTRIBUTION}');\n\n\t\tconst refocus = function() {#" "$SCRIPT"
 else
   sed -i "s#\t\tconst refocus = function() {#\t\tmap.attributionControl.setPrefix(false);\n\n\t\tconst refocus = function() {#" "$SCRIPT"
+fi
+
+if [[ -n "$DAY_ATTRIBUTION" ]]; then
+  sed -i "s#\t\tconst refocus = function() {#\t\t// BEGIN 329 WORLD DAY\n\t\tconst worldDayControl = L.control({ position: 'bottomright' });\n\t\tworldDayControl.onAdd = function() {\n\t\t\tconst container = L.DomUtil.create('div', 'leaflet-control world-day-control');\n\t\t\tcontainer.textContent = '${DAY_ATTRIBUTION}';\n\t\t\treturn container;\n\t\t};\n\t\tworldDayControl.addTo(map);\n\t\t// END 329 WORLD DAY\n\n\t\tconst refocus = function() {#" "$SCRIPT"
 fi
 
 echo "Branded viewer at $VIEWER_DIR (title: ${TITLE})"

@@ -87,6 +87,20 @@ Steve head. Edit `assets/favicon.ico` or the
 favicons aggressively; after publishing, use a hard refresh or a private window
 to see a changed icon.
 
+### Discord POIs
+
+The map can show a live `Points of Interest` overlay supplied by the companion
+`329-discord-bot` Azure Function. The endpoint is intentionally not committed.
+When publishing after the bot API is deployed, set it for that deployment:
+
+```sh
+POI_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/pois' ./scripts/deploy.sh
+```
+
+Use the same variable with `scripts/brand-viewer.sh` when testing locally. An
+empty value simply leaves the overlay empty. The API URL is public and read-only;
+Discord command authorization remains in the Azure Function.
+
 ## Deploy to Azure
 
 Create an Azure Static Web App with the Free plan and `Other` as its deployment

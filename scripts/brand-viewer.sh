@@ -7,6 +7,7 @@ ASSET="$ROOT_DIR/assets/favicon.ico"
 REGIONS="$ROOT_DIR/assets/regions.js"
 COORDINATES="$ROOT_DIR/assets/coordinates.js"
 REGION_STYLE="$ROOT_DIR/assets/regions.css"
+POIS="$ROOT_DIR/assets/pois.js"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
 INFO="$VIEWER_DIR/data/info.json"
@@ -20,6 +21,7 @@ TITLE="Minecraft with 329"
 [[ -f "$REGIONS" ]] || { echo "Region definitions not found: $REGIONS" >&2; exit 1; }
 [[ -f "$COORDINATES" ]] || { echo "Coordinate initialization not found: $COORDINATES" >&2; exit 1; }
 [[ -f "$REGION_STYLE" ]] || { echo "Region stylesheet not found: $REGION_STYLE" >&2; exit 1; }
+[[ -f "$POIS" ]] || { echo "POI definitions not found: $POIS" >&2; exit 1; }
 
 # Install the custom favicon alongside the viewer and remove any stale variants.
 cp -f "$ASSET" "$VIEWER_DIR/favicon.ico"
@@ -44,6 +46,16 @@ sed -i '/leaflet-1\.9\.4\/leaflet\.css/a\    <link rel="stylesheet" href="region
 # rerunning this script does not duplicate the regions.
 sed -i '/\/\/ BEGIN 329 REGIONS/,/\/\/ END 329 REGIONS/d' "$SCRIPT"
 sed -i "/const overlayMaps = {};/r $REGIONS" "$SCRIPT"
+
+# The POI endpoint is supplied at deployment time so an environment-specific URL
+# never needs to be committed to the viewer assets.
+sed -i '/\/\/ BEGIN 329 POIS/,/\/\/ END 329 POIS/d' "$SCRIPT"
+# Remove POI blocks written before they were given idempotency markers. Their
+# refresh timer follows the block and is removed separately.
+sed -i '/^[[:space:]]*const poiApiUrl = /,/^[[:space:]]*loadPois();/d' "$SCRIPT"
+sed -i '/^[[:space:]]*setInterval(loadPois, 60000);/d' "$SCRIPT"
+sed -i "/const overlayMaps = {};/r $POIS" "$SCRIPT"
+sed -i "s|__POI_API_URL__|${POI_API_URL:-}|g" "$SCRIPT"
 
 # Show the initial map center before the visitor moves a mouse or touches the map.
 sed -i '/\/\/ BEGIN 329 COORDINATES/,/\/\/ END 329 COORDINATES/d' "$SCRIPT"

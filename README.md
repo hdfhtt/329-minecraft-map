@@ -61,7 +61,8 @@ control.
 
 The icon source lives at `assets/favicon.ico`, the Leaflet region definitions
 live at `assets/regions.js`, the initial coordinate display lives at
-`assets/coordinates.js`, and the label styles live at `assets/regions.css`.
+`assets/coordinates.js`, the donation panel lives at `assets/donations.js`, and
+the label/control styles live at `assets/regions.css`.
 All are committed to Git. Each region has a distinct tinted fill and a permanent
 pixel-style label.
 
@@ -96,6 +97,7 @@ When publishing after the bot API is deployed, set it for that deployment:
 ```sh
 POI_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/pois' \
 REGION_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/regions' \
+DONATION_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/donations' \
 ./scripts/deploy.sh
 ```
 

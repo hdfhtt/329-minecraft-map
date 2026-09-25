@@ -55,8 +55,9 @@ without converting chunks again:
 The stock MinedMap viewer ships with the title `MinedMap`, no favicon, and
 Leaflet and renderer credits. This project rebrands it to **Minecraft with 329**
 with a custom favicon and replaces the credits with the map render timestamp.
-It also adds a default-visible `Regions` overlay with named boundaries that can
-be hidden from the Leaflet layer control.
+It also adds a default-visible `Regions` overlay with named boundaries loaded
+from the companion Discord bot API that can be hidden from the Leaflet layer
+control.
 
 The icon source lives at `assets/favicon.ico`, the Leaflet region definitions
 live at `assets/regions.js`, the initial coordinate display lives at
@@ -77,12 +78,11 @@ The script sets the page title, copies `assets/favicon.ico` to
 MinedMap credits, and shows the complete Minecraft day from `329/level.dat` in
 its own map panel alongside the modification timestamp of `data/info.json` in
 Malaysia time. It is idempotent and safe to run repeatedly. Edit
-`assets/regions.js` to change region names, bounds, colors, player heads, or their
-cached avatar URLs, and edit `assets/regions.css` to change the labels. Add Bedrock
-gamertags as strings in a region's `players` list; heads appear below its name and show
-the gamertag on hover. Avatar URLs are resolved before publishing so mobile WebViews do
-not depend on Geyser's public skin API; players without a cached avatar use the standard
-Steve head. Edit `assets/favicon.ico` or the
+`assets/regions.js` to change how live regions are rendered, and edit
+`assets/regions.css` to change the labels. Manage region names, coordinates,
+colors, and Minecraft gamertags with the Discord `/region` command. Avatar URLs
+are cached in `assets/regions.js`; players without a cached avatar use the
+standard Steve head. Edit `assets/favicon.ico` or the
 `TITLE` value in `scripts/brand-viewer.sh` to change the branding. Browsers cache
 favicons aggressively; after publishing, use a hard refresh or a private window
 to see a changed icon.
@@ -94,12 +94,14 @@ The map can show a live `Points of Interest` overlay supplied by the companion
 When publishing after the bot API is deployed, set it for that deployment:
 
 ```sh
-POI_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/pois' ./scripts/deploy.sh
+POI_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/pois' \
+REGION_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/regions' \
+./scripts/deploy.sh
 ```
 
-Use the same variable with `scripts/brand-viewer.sh` when testing locally. An
-empty value simply leaves the overlay empty. The API URL is public and read-only;
-Discord command authorization remains in the Azure Function.
+Use the same variables with `scripts/brand-viewer.sh` when testing locally. An
+empty value simply leaves the matching overlay empty. The API URLs are public and
+read-only; Discord command authorization remains in the Azure Function.
 
 ## Deploy to Azure
 

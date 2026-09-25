@@ -112,18 +112,6 @@
   outline-offset: 2px;
 }
 
-.region-label-estuary {
-  --region-color: #d58c2b;
-}
-
-.region-label-winterhold {
-  --region-color: #62aee0;
-}
-
-.region-label-sylvaria {
-  --region-color: #4d9b57;
-}
-
 .leaflet-container .poi-marker-icon {
   width: 18px;
   height: 18px;

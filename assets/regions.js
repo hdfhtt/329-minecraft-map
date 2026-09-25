@@ -1,35 +1,8 @@
 		// BEGIN 329 REGIONS
-		const regions = [
-			{
-				name: 'Endless Estuary',
-				bounds: [[-510, -48], [-326, 142]],
-				color: '#d58c2b',
-				labelClass: 'region-label-estuary',
-				players: [
-					'TheDyingStar453',
-					'ActuallyYoon',
-					'Super Zazaaaa',
-				],
-			},
-			{
-				name: 'Winterhold',
-				bounds: [[-416, 158], [-214, 400]],
-				color: '#62aee0',
-				labelClass: 'region-label-winterhold',
-				players: ['Fitz9566'],
-			},
-			{
-				name: 'The Lands of Sylvaria',
-				bounds: [[-1500, 326], [-1048, 602]],
-				color: '#4d9b57',
-				labelClass: 'region-label-sylvaria',
-				players: [
-					'CAPIK052545',
-					'YVKI2566',
-					'Izzatsaubri45',
-				],
-			},
-		];
+		const regionApiUrl = '__REGION_API_URL__';
+		const regionLayer = L.layerGroup().addTo(map);
+		overlayMaps['Regions'] = regionLayer;
+
 		const defaultAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
 		const playerAvatars = {
 			TheDyingStar453: 'https://mc-heads.net/avatar/8144751c9b5a461d2898907ee3e9f61e5367b42294d587b0555701e95896315/32.png',
@@ -40,6 +13,8 @@
 			YVKI2566: defaultAvatar,
 			Izzatsaubri45: defaultAvatar,
 		};
+
+		let regionEntries = [];
 
 		const createRegionLabel = function(region) {
 			const label = document.createElement('div');
@@ -100,30 +75,47 @@
 			return label;
 		};
 
-		const regionEntries = regions.map(function(region) {
-			const rectangle = L.rectangle(region.bounds, {
+		const setRegionColor = function(element, region) {
+			if (element) element.style.setProperty('--region-color', region.color);
+		};
+
+		const createRegionEntry = function(region) {
+			if (!Array.isArray(region.coordinates) || region.coordinates.length < 3 || typeof region.name !== 'string' || typeof region.color !== 'string') return undefined;
+			const latLngs = region.coordinates.map(function(coordinate) {
+				if (!Number.isInteger(coordinate.x) || !Number.isInteger(coordinate.z)) return undefined;
+				return [-coordinate.z, coordinate.x];
+			});
+			if (latLngs.some(function(latLng) { return !latLng; })) return undefined;
+
+			const polygon = L.polygon(latLngs, {
 				color: region.color,
 				fillColor: region.color,
 				fillOpacity: 0.18,
 				weight: 3,
 			});
-			rectangle.bindTooltip(createRegionLabel(region), {
-				className: `region-label ${region.labelClass}`,
+			const entryRegion = {
+				...region,
+				bounds: polygon.getBounds(),
+				players: Array.isArray(region.players) ? region.players : [],
+			};
+			polygon.bindTooltip(createRegionLabel(entryRegion), {
+				className: 'region-label',
 				direction: 'center',
 				opacity: 1,
 				permanent: true,
 				interactive: true,
 			});
-			return { region, rectangle, tooltip: rectangle.getTooltip() };
-		});
-
-		const regionLayer = L.layerGroup(regionEntries.map(function(entry) {
-			return entry.rectangle;
-		})).addTo(map);
-		overlayMaps['Regions'] = regionLayer;
+			return { region: entryRegion, polygon, tooltip: polygon.getTooltip() };
+		};
 
 		const mergedTooltips = [];
 		let collisionUpdateFrame;
+
+		const clearMergedTooltips = function() {
+			mergedTooltips.splice(0).forEach(function(tooltip) {
+				map.removeLayer(tooltip);
+			});
+		};
 
 		const labelsOverlap = function(first, second) {
 			return first.left < second.right && first.right > second.left &&
@@ -135,7 +127,8 @@
 			label.className = 'region-label-group';
 			entries.forEach(function(entry) {
 				const section = document.createElement('div');
-				section.className = `region-label-section ${entry.region.labelClass}`;
+				section.className = 'region-label-section';
+				setRegionColor(section, entry.region);
 				section.append(createRegionLabel(entry.region));
 				label.append(section);
 			});
@@ -144,15 +137,14 @@
 
 		const updateRegionLabels = function() {
 			collisionUpdateFrame = undefined;
-			mergedTooltips.splice(0).forEach(function(tooltip) {
-				map.removeLayer(tooltip);
-			});
+			clearMergedTooltips();
 
 			const visibleEntries = regionEntries.filter(function(entry) {
 				const element = entry.tooltip.getElement();
 				if (!element) return false;
 				element.classList.remove('region-label-hidden');
-				return map.hasLayer(entry.rectangle);
+				setRegionColor(element, entry.region);
+				return map.hasLayer(entry.polygon);
 			});
 
 			const groups = visibleEntries.map(function(entry) {
@@ -185,7 +177,7 @@
 					entry.tooltip.getElement().classList.add('region-label-hidden');
 				});
 				const center = group.reduce(function(total, entry) {
-					return total.add(map.latLngToContainerPoint(entry.rectangle.getBounds().getCenter()));
+					return total.add(map.latLngToContainerPoint(entry.polygon.getBounds().getCenter()));
 				}, L.point(0, 0)).divideBy(group.length);
 				const tooltip = L.tooltip({
 					className: 'region-label region-label-merged',
@@ -203,6 +195,27 @@
 			collisionUpdateFrame = requestAnimationFrame(updateRegionLabels);
 		};
 
+		const loadRegions = function() {
+			if (!regionApiUrl) return;
+			fetch(regionApiUrl).then(function(response) {
+				if (!response.ok) throw new Error(`Region API returned ${response.status}`);
+				return response.json();
+			}).then(function(regions) {
+				if (!Array.isArray(regions)) throw new Error('Region API returned invalid data');
+				clearMergedTooltips();
+				regionLayer.clearLayers();
+				regionEntries = regions.map(createRegionEntry).filter(Boolean);
+				regionEntries.forEach(function(entry) {
+					entry.polygon.addTo(regionLayer);
+				});
+				scheduleRegionLabelUpdate();
+			}).catch(function(error) {
+				console.warn('Unable to load map regions.', error);
+			});
+		};
+
+		loadRegions();
+		setInterval(loadRegions, 60000);
 		map.whenReady(scheduleRegionLabelUpdate);
 		map.on('zoomend moveend resize overlayadd overlayremove', scheduleRegionLabelUpdate);
 		// END 329 REGIONS

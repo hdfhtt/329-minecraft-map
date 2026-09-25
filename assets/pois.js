@@ -19,12 +19,14 @@
 				poiLayer.clearLayers();
 				pois.forEach(function(poi) {
 					if (!Number.isInteger(poi.x) || !Number.isInteger(poi.z) || typeof poi.name !== 'string') return;
-					L.circleMarker([-poi.z, poi.x], {
-						radius: 7,
-						color: '#fff4a8',
-						fillColor: '#e79a20',
-						fillOpacity: 1,
-						weight: 2,
+					L.marker([-poi.z, poi.x], {
+						icon: L.divIcon({
+							className: 'poi-marker-icon',
+							html: '<span class="poi-marker-core"></span>',
+							iconSize: [18, 18],
+							iconAnchor: [9, 9],
+							popupAnchor: [0, -11],
+						}),
 					}).bindPopup(`<strong>${escapeHtml(poi.name)}</strong><br>X ${poi.x}, Z ${poi.z}`).addTo(poiLayer);
 				});
 			}).catch(function(error) {

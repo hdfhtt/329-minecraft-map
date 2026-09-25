@@ -55,7 +55,7 @@ sed -i '/\/\/ BEGIN 329 POIS/,/\/\/ END 329 POIS/d' "$SCRIPT"
 # refresh timer follows the block and is removed separately.
 sed -i '/^[[:space:]]*const poiApiUrl = /,/^[[:space:]]*loadPois();/d' "$SCRIPT"
 sed -i '/^[[:space:]]*setInterval(loadPois, 60000);/d' "$SCRIPT"
-sed -i "/const overlayMaps = {};/r $POIS" "$SCRIPT"
+sed -i "/\/\/ END 329 REGIONS/r $POIS" "$SCRIPT"
 sed -i "s|__POI_API_URL__|${POI_API_URL:-}|g" "$SCRIPT"
 
 # Show the initial map center before the visitor moves a mouse or touches the map.

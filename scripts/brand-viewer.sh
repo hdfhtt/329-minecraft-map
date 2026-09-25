@@ -8,6 +8,7 @@ REGIONS="$ROOT_DIR/assets/regions.js"
 COORDINATES="$ROOT_DIR/assets/coordinates.js"
 REGION_STYLE="$ROOT_DIR/assets/regions.css"
 POIS="$ROOT_DIR/assets/pois.js"
+DONATIONS="$ROOT_DIR/assets/donations.js"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
 INFO="$VIEWER_DIR/data/info.json"
@@ -22,6 +23,7 @@ TITLE="Minecraft with 329"
 [[ -f "$COORDINATES" ]] || { echo "Coordinate initialization not found: $COORDINATES" >&2; exit 1; }
 [[ -f "$REGION_STYLE" ]] || { echo "Region stylesheet not found: $REGION_STYLE" >&2; exit 1; }
 [[ -f "$POIS" ]] || { echo "POI definitions not found: $POIS" >&2; exit 1; }
+[[ -f "$DONATIONS" ]] || { echo "Donation panel definitions not found: $DONATIONS" >&2; exit 1; }
 
 # Install the custom favicon alongside the viewer and remove any stale variants.
 cp -f "$ASSET" "$VIEWER_DIR/favicon.ico"
@@ -57,6 +59,12 @@ sed -i '/^[[:space:]]*const poiApiUrl = /,/^[[:space:]]*loadPois();/d' "$SCRIPT"
 sed -i '/^[[:space:]]*setInterval(loadPois, 60000);/d' "$SCRIPT"
 sed -i "/\/\/ END 329 REGIONS/r $POIS" "$SCRIPT"
 sed -i "s|__POI_API_URL__|${POI_API_URL:-}|g" "$SCRIPT"
+
+# Add the donation panel as an optional themed map control. Like other public API
+# URLs, it is supplied per deployment and omitted from committed viewer assets.
+sed -i '/\/\/ BEGIN 329 DONATIONS/,/\/\/ END 329 DONATIONS/d' "$SCRIPT"
+sed -i "/\/\/ END 329 POIS/r $DONATIONS" "$SCRIPT"
+sed -i "s|__DONATION_API_URL__|${DONATION_API_URL:-}|g" "$SCRIPT"
 
 # Show the initial map center before the visitor moves a mouse or touches the map.
 sed -i '/\/\/ BEGIN 329 COORDINATES/,/\/\/ END 329 COORDINATES/d' "$SCRIPT"

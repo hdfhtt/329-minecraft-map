@@ -236,6 +236,14 @@
   text-transform: uppercase;
 }
 
+.leaflet-container .leaflet-control-layers label.region-information-layer-option {
+  margin-left: 16px;
+}
+
+.leaflet-container .leaflet-control-layers label.region-information-layer-disabled {
+  opacity: 0.48;
+}
+
 .leaflet-container .leaflet-control-layers-selector {
   accent-color: var(--map-ui-color);
 }

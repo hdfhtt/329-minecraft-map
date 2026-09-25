@@ -1,7 +1,11 @@
 		// BEGIN 329 REGIONS
 		const regionApiUrl = '__REGION_API_URL__';
 		const regionLayer = L.layerGroup().addTo(map);
+		const regionInformationLayer = L.layerGroup().addTo(map);
+		let regionInformationPreferred = true;
+		let syncingRegionInformation = false;
 		overlayMaps['Regions'] = regionLayer;
+		overlayMaps['Information'] = regionInformationLayer;
 
 		const defaultAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
 		const playerAvatars = {
@@ -98,14 +102,14 @@
 				bounds: polygon.getBounds(),
 				players: Array.isArray(region.players) ? region.players : [],
 			};
-			polygon.bindTooltip(createRegionLabel(entryRegion), {
+			const tooltip = L.tooltip({
 				className: 'region-label',
 				direction: 'center',
 				opacity: 1,
 				permanent: true,
 				interactive: true,
-			});
-			return { region: entryRegion, polygon, tooltip: polygon.getTooltip() };
+			}).setContent(createRegionLabel(entryRegion)).setLatLng(polygon.getBounds().getCenter());
+			return { region: entryRegion, polygon, tooltip };
 		};
 
 		const mergedTooltips = [];
@@ -113,8 +117,54 @@
 
 		const clearMergedTooltips = function() {
 			mergedTooltips.splice(0).forEach(function(tooltip) {
-				map.removeLayer(tooltip);
+				regionInformationLayer.removeLayer(tooltip);
 			});
+		};
+
+		const getLayerControlInput = function(name) {
+			const labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
+			for (const label of labels) {
+				if (label.textContent.trim() === name) return label.querySelector('.leaflet-control-layers-selector');
+			}
+			return undefined;
+		};
+
+		const decorateLayerControl = function() {
+			const labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
+			labels.forEach(function(label) {
+				if (label.textContent.trim() === 'Information') label.classList.add('region-information-layer-option');
+			});
+		};
+
+		const syncRegionInformationControl = function() {
+			decorateLayerControl();
+			const input = getLayerControlInput('Information');
+			const regionsVisible = map.hasLayer(regionLayer);
+
+			if (!regionsVisible) {
+				if (map.hasLayer(regionInformationLayer)) regionInformationPreferred = true;
+				syncingRegionInformation = true;
+				map.removeLayer(regionInformationLayer);
+				syncingRegionInformation = false;
+				if (input) {
+					input.checked = false;
+					input.disabled = true;
+					input.closest('label').classList.add('region-information-layer-disabled');
+				}
+				clearMergedTooltips();
+				return;
+			}
+
+			if (input) {
+				input.disabled = false;
+				input.closest('label').classList.remove('region-information-layer-disabled');
+			}
+
+			if (regionInformationPreferred && !map.hasLayer(regionInformationLayer)) {
+				syncingRegionInformation = true;
+				regionInformationLayer.addTo(map);
+				syncingRegionInformation = false;
+			}
 		};
 
 		const labelsOverlap = function(first, second) {
@@ -138,6 +188,7 @@
 		const updateRegionLabels = function() {
 			collisionUpdateFrame = undefined;
 			clearMergedTooltips();
+			if (!map.hasLayer(regionLayer) || !map.hasLayer(regionInformationLayer)) return;
 
 			const visibleEntries = regionEntries.filter(function(entry) {
 				const element = entry.tooltip.getElement();
@@ -185,7 +236,7 @@
 					opacity: 1,
 					permanent: true,
 					interactive: true,
-				}).setContent(createMergedRegionLabel(group)).setLatLng(map.containerPointToLatLng(center)).addTo(map);
+				}).setContent(createMergedRegionLabel(group)).setLatLng(map.containerPointToLatLng(center)).addTo(regionInformationLayer);
 				mergedTooltips.push(tooltip);
 			});
 		};
@@ -204,9 +255,11 @@
 				if (!Array.isArray(regions)) throw new Error('Region API returned invalid data');
 				clearMergedTooltips();
 				regionLayer.clearLayers();
+				regionInformationLayer.clearLayers();
 				regionEntries = regions.map(createRegionEntry).filter(Boolean);
 				regionEntries.forEach(function(entry) {
 					entry.polygon.addTo(regionLayer);
+					entry.tooltip.addTo(regionInformationLayer);
 				});
 				scheduleRegionLabelUpdate();
 			}).catch(function(error) {
@@ -216,6 +269,13 @@
 
 		loadRegions();
 		setInterval(loadRegions, 60000);
+		setTimeout(syncRegionInformationControl, 0);
 		map.whenReady(scheduleRegionLabelUpdate);
 		map.on('zoomend moveend resize overlayadd overlayremove', scheduleRegionLabelUpdate);
+		map.on('overlayadd overlayremove', function(event) {
+			if (event.layer === regionInformationLayer && !syncingRegionInformation) {
+				regionInformationPreferred = map.hasLayer(regionInformationLayer);
+			}
+			syncRegionInformationControl();
+		});
 		// END 329 REGIONS

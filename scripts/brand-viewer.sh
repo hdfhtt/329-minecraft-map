@@ -46,6 +46,7 @@ sed -i '/leaflet-1\.9\.4\/leaflet\.css/a\    <link rel="stylesheet" href="region
 # rerunning this script does not duplicate the regions.
 sed -i '/\/\/ BEGIN 329 REGIONS/,/\/\/ END 329 REGIONS/d' "$SCRIPT"
 sed -i "/const overlayMaps = {};/r $REGIONS" "$SCRIPT"
+sed -i "s|__REGION_API_URL__|${REGION_API_URL:-}|g" "$SCRIPT"
 
 # The POI endpoint is supplied at deployment time so an environment-specific URL
 # never needs to be committed to the viewer assets.

@@ -106,21 +106,32 @@ Use the same variables with `scripts/brand-viewer.sh` when testing locally. An
 empty value simply leaves the matching overlay empty. The API URLs are public and
 read-only; Discord command authorization remains in the Azure Function.
 
+For repeated deploys, copy `.env.example` to `.env` and fill in the URLs there.
+`scripts/deploy.sh` loads `.env` automatically, and `.env` is ignored by Git.
+
 ## Deploy to Azure
 
 Create an Azure Static Web App with the Free plan and `Other` as its deployment
 source. Copy its deployment token from **Overview > Manage deployment token**,
-then run:
+then create a local environment file:
+
+```sh
+cp .env.example .env
+```
+
+Edit `.env` with the Function App URLs and Static Web App deployment token. Then
+run:
 
 ```sh
 ./scripts/deploy.sh
 ```
 
-Paste the token at the hidden prompt. The script validates the rendered viewer,
-applies the project branding, creates a temporary deployment package, excludes
-the local `data/processed/` rendering cache, and publishes to the production
-environment. The temporary package and interactively entered token are removed
-when the script exits.
+If `.env` does not define `SWA_CLI_DEPLOYMENT_TOKEN`, paste the token at the
+hidden prompt. The script validates the rendered viewer, applies the project
+branding, creates a temporary deployment package, excludes the local
+`data/processed/` rendering cache, and publishes to the production environment.
+The temporary package and interactively entered token are removed when the script
+exits.
 
 For unattended use, provide the token through the environment:
 

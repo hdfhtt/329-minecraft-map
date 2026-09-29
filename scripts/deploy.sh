@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VIEWER_DIR="$ROOT_DIR/output/viewer"
+ENV_FILE="$ROOT_DIR/.env"
 DEPLOY_DIR=""
 
 cleanup() {
@@ -21,6 +22,13 @@ command -v npx >/dev/null || { echo "npx is required. Install Node.js first." >&
   echo "Rendered map data not found. Run scripts/render.sh first." >&2
   exit 1
 }
+
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
 
 "$ROOT_DIR/scripts/brand-viewer.sh" "$VIEWER_DIR"
 

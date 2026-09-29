@@ -90,9 +90,10 @@ to see a changed icon.
 
 ### Discord POIs
 
-The map can show a live `Points of Interest` overlay supplied by the companion
-`329-discord-bot` Azure Function. The endpoint is intentionally not committed.
-When publishing after the bot API is deployed, set it for that deployment:
+The map can show live `Points of Interest`, `Regions`, and `Donations` overlays
+supplied by the companion `329-discord-bot` Azure Function. The endpoints are
+intentionally not committed. When publishing after the bot API is deployed,
+either set them for that deployment:
 
 ```sh
 POI_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/pois' \

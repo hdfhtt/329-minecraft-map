@@ -91,7 +91,7 @@ to see a changed icon.
 ### Discord POIs
 
 The map can show live `Points of Interest`, `Regions`, and `Donations` overlays
-supplied by the companion `329-discord-bot` Azure Function. The endpoints are
+supplied by the companion `329-minecraft-api` Azure Function. The endpoints are
 intentionally not committed. When publishing after the bot API is deployed,
 either set them for that deployment:
 

@@ -11,6 +11,24 @@
 			return new Intl.DateTimeFormat('en-MY', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Kuala_Lumpur' }).format(date);
 		};
 
+		const defaultDonationAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
+
+		const createDonationAvatar = function(name) {
+			const avatar = document.createElement('img');
+			avatar.className = 'donation-avatar';
+			avatar.alt = '';
+			avatar.addEventListener('error', function() {
+				if (avatar.dataset.fallback) {
+					avatar.classList.add('donation-avatar-unavailable');
+					return;
+				}
+				avatar.dataset.fallback = 'true';
+				avatar.src = defaultDonationAvatar;
+			});
+			avatar.src = name ? `https://mc-heads.net/avatar/${encodeURIComponent(name)}/32.png` : defaultDonationAvatar;
+			return avatar;
+		};
+
 		const sumDonations = function(items) {
 			return items.reduce(function(total, donation) {
 				return total + Number(donation.amount || 0);
@@ -31,6 +49,8 @@
 			items.forEach(function(donation, index) {
 				const row = document.createElement('li');
 				row.className = 'donation-row';
+
+				row.append(createDonationAvatar(donation.name));
 
 				const name = document.createElement('div');
 				name.className = 'donation-name';
@@ -91,7 +111,7 @@
 			monthButton.type = 'button';
 			monthButton.setAttribute('role', 'tab');
 			monthButton.setAttribute('aria-selected', 'true');
-			monthButton.textContent = 'This Month';
+			monthButton.textContent = 'Last 30 Days';
 
 			const topButton = document.createElement('button');
 			topButton.className = 'donation-tab';

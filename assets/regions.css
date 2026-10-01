@@ -426,14 +426,21 @@
 }
 
 .leaflet-container .donation-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leaflet-container .donation-info {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .leaflet-container .donation-avatar {
-  grid-row: 1 / -1;
-  align-self: center;
+  flex: none;
   width: 28px;
   height: 28px;
   border: 1px solid rgba(213, 140, 43, 0.65);
@@ -458,9 +465,6 @@
 }
 
 .leaflet-container .donation-amount {
-  grid-column: 3;
-  grid-row: 1 / -1;
-  align-self: center;
   color: #ffd28a;
   white-space: nowrap;
 }
@@ -472,14 +476,6 @@
   font-weight: 900;
   letter-spacing: 0.03em;
   line-height: 1.25;
-}
-
-.leaflet-container .donation-meta {
-  grid-column: 2;
-}
-
-.leaflet-container .donation-empty {
-  grid-column: 1 / -1;
 }
 
 .leaflet-container .donation-total {

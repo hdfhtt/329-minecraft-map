@@ -52,22 +52,26 @@
 
 				row.append(createDonationAvatar(donation.name));
 
+				const info = document.createElement('div');
+				info.className = 'donation-info';
+
 				const name = document.createElement('div');
 				name.className = 'donation-name';
 				name.textContent = type === 'top' ? `#${index + 1} ${donation.name}` : donation.name;
-
-				const amount = document.createElement('div');
-				amount.className = 'donation-amount';
-				amount.textContent = formatDonationAmount(donation.amount);
-
-				row.append(name, amount);
+				info.append(name);
 
 				if (type === 'month') {
 					const meta = document.createElement('div');
 					meta.className = 'donation-meta';
 					meta.textContent = formatDonationDate(donation.date);
-					row.append(meta);
+					info.append(meta);
 				}
+
+				const amount = document.createElement('div');
+				amount.className = 'donation-amount';
+				amount.textContent = formatDonationAmount(donation.amount);
+
+				row.append(info, amount);
 
 				list.append(row);
 			});

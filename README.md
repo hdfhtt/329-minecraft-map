@@ -81,9 +81,10 @@ its own map panel alongside the modification timestamp of `data/info.json` in
 Malaysia time. It is idempotent and safe to run repeatedly. Edit
 `assets/regions.js` to change how live regions are rendered, and edit
 `assets/regions.css` to change the labels. Manage region names, coordinates,
-colors, and Minecraft gamertags with the Discord `/region` command. Avatar URLs
-are cached in `assets/regions.js`; players without a cached avatar use the
-standard Steve head. Edit `assets/favicon.ico` or the
+colors, and members with the Discord `/region` command. Player avatars are
+supplied by the region API, derived from each registered player's Xbox XUID;
+players without a resolved avatar use the standard Steve head. Edit
+`assets/favicon.ico` or the
 `TITLE` value in `scripts/brand-viewer.sh` to change the branding. Browsers cache
 favicons aggressively; after publishing, use a hard refresh or a private window
 to see a changed icon.

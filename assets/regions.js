@@ -30,8 +30,8 @@
 			const players = document.createElement('div');
 			players.className = 'region-players';
 			region.players.forEach(function(playerEntry) {
-				const playerData = (typeof playerEntry === 'string') ? { gamerTag: playerEntry } : (playerEntry || {});
-				const playerName = playerData.gamerTag || playerData.displayName || '';
+				const playerData = (typeof playerEntry === 'string') ? { xboxGamertag: playerEntry } : (playerEntry || {});
+				const playerName = playerData.xboxGamertag || playerData.discordUsername || '';
 				if (!playerName) return;
 				const player = document.createElement('button');
 				player.className = 'region-player';

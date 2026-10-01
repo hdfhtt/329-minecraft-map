@@ -406,7 +406,7 @@
 }
 
 .leaflet-container .donation-content {
-  max-height: 260px;
+  height: 260px;
   overflow: auto;
 }
 

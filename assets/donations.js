@@ -50,6 +50,14 @@
 				const row = document.createElement('li');
 				row.className = 'donation-row';
 
+				if (type === 'top') {
+					const rank = document.createElement('div');
+					rank.className = 'donation-rank';
+					if (index < 3) rank.classList.add(`donation-rank-${index + 1}`);
+					rank.textContent = String(index + 1);
+					row.append(rank);
+				}
+
 				row.append(createDonationAvatar(donation.name));
 
 				const info = document.createElement('div');
@@ -57,7 +65,7 @@
 
 				const name = document.createElement('div');
 				name.className = 'donation-name';
-				name.textContent = type === 'top' ? `#${index + 1} ${donation.name}` : donation.name;
+				name.textContent = donation.name;
 				info.append(name);
 
 				if (type === 'month') {

@@ -11,6 +11,12 @@
 			return new Intl.DateTimeFormat('en-MY', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Kuala_Lumpur' }).format(date);
 		};
 
+		const sumDonations = function(items) {
+			return items.reduce(function(total, donation) {
+				return total + Number(donation.amount || 0);
+			}, 0);
+		};
+
 		const createDonationList = function(items, type) {
 			const list = document.createElement('ol');
 			list.className = 'donation-list';
@@ -98,12 +104,20 @@
 			content.className = 'donation-content';
 			content.textContent = 'Loading donations...';
 
+			const total = document.createElement('div');
+			total.className = 'donation-total';
+			const totalLabel = document.createElement('span');
+			totalLabel.className = 'donation-total-label';
+			const totalAmount = document.createElement('span');
+			totalAmount.className = 'donation-total-amount';
+			total.append(totalLabel, totalAmount);
+
 			const disclaimer = document.createElement('p');
 			disclaimer.className = 'donation-disclaimer';
 			disclaimer.textContent = 'Every donation goes entirely toward running Minecraft with 329 and its related projects, including the Discord bot and this map portal. None of it is used for personal purposes.';
 
 			tabs.append(monthButton, topButton);
-			panel.append(header, tabs, content, disclaimer);
+			panel.append(header, tabs, content, total, disclaimer);
 			overlay.append(panel);
 
 			let donations = { thisMonth: [], topDonators: [] };
@@ -115,6 +129,13 @@
 				monthButton.setAttribute('aria-selected', String(activeTab === 'month'));
 				topButton.setAttribute('aria-selected', String(activeTab === 'top'));
 				content.replaceChildren(createDonationList(activeTab === 'month' ? donations.thisMonth : donations.topDonators, activeTab));
+				if (activeTab === 'month') {
+					totalLabel.textContent = 'Last 30 days total';
+					totalAmount.textContent = formatDonationAmount(sumDonations(donations.thisMonth));
+				} else {
+					totalLabel.textContent = 'All-time total';
+					totalAmount.textContent = formatDonationAmount(sumDonations(donations.topDonators));
+				}
 			};
 
 			monthButton.addEventListener('click', function() {

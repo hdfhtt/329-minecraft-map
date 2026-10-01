@@ -65,7 +65,7 @@
 				if (type === 'month') {
 					const meta = document.createElement('div');
 					meta.className = 'donation-meta';
-					meta.textContent = `${formatDonationDate(donation.date)} - Ref ${donation.refNo}`;
+					meta.textContent = formatDonationDate(donation.date);
 					row.append(meta);
 				}
 
@@ -150,11 +150,11 @@
 				topButton.setAttribute('aria-selected', String(activeTab === 'top'));
 				content.replaceChildren(createDonationList(activeTab === 'month' ? donations.thisMonth : donations.topDonators, activeTab));
 				if (activeTab === 'month') {
+					total.style.visibility = '';
 					totalLabel.textContent = 'Last 30 days total';
 					totalAmount.textContent = formatDonationAmount(sumDonations(donations.thisMonth));
 				} else {
-					totalLabel.textContent = 'All-time total';
-					totalAmount.textContent = formatDonationAmount(sumDonations(donations.topDonators));
+					total.style.visibility = 'hidden';
 				}
 			};
 

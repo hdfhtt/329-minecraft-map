@@ -439,6 +439,40 @@
   gap: 3px;
 }
 
+.leaflet-container .donation-rank {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(213, 140, 43, 0.65);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 253, 242, 0.9);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaflet-container .donation-rank-1 {
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.35);
+}
+
+.leaflet-container .donation-rank-2 {
+  border-color: #cdd3dc;
+  color: #cdd3dc;
+  box-shadow: 0 0 0 1px rgba(205, 211, 220, 0.35);
+}
+
+.leaflet-container .donation-rank-3 {
+  border-color: #cd7f32;
+  color: #e0975a;
+  box-shadow: 0 0 0 1px rgba(205, 127, 50, 0.35);
+}
+
 .leaflet-container .donation-avatar {
   flex: none;
   width: 28px;

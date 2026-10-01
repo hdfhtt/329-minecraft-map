@@ -8,15 +8,6 @@
 		overlayMaps['Information'] = regionInformationLayer;
 
 		const defaultAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
-		const playerAvatars = {
-			TheDyingStar453: 'https://mc-heads.net/avatar/8144751c9b5a461d2898907ee3e9f61e5367b42294d587b0555701e95896315/32.png',
-			ActuallyYoon: 'https://mc-heads.net/avatar/a7364c63c3e3bcac6061788d568b5f806f9e93a3ac31399cc98db6f1e70e6383/32.png',
-			'Super Zazaaaa': defaultAvatar,
-			Fitz9566: defaultAvatar,
-			CAPIK052545: defaultAvatar,
-			YVKI2566: defaultAvatar,
-			Izzatsaubri45: defaultAvatar,
-		};
 
 		let regionEntries = [];
 
@@ -38,7 +29,10 @@
 
 			const players = document.createElement('div');
 			players.className = 'region-players';
-			region.players.forEach(function(playerName) {
+			region.players.forEach(function(playerEntry) {
+				const playerData = (typeof playerEntry === 'string') ? { gamerTag: playerEntry } : (playerEntry || {});
+				const playerName = playerData.gamerTag || playerData.displayName || '';
+				if (!playerName) return;
 				const player = document.createElement('button');
 				player.className = 'region-player';
 				player.type = 'button';
@@ -67,7 +61,7 @@
 					head.dataset.fallback = 'true';
 					head.src = defaultAvatar;
 				});
-				head.src = playerAvatars[playerName] || defaultAvatar;
+				head.src = playerData.avatarUrl || defaultAvatar;
 
 				const playerLabel = document.createElement('span');
 				playerLabel.className = 'region-player-name';

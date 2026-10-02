@@ -13,7 +13,7 @@
 
 		const defaultDonationAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
 
-		const createDonationAvatar = function(name) {
+		const createDonationAvatar = function(avatarUrl) {
 			const avatar = document.createElement('img');
 			avatar.className = 'donation-avatar';
 			avatar.alt = '';
@@ -25,7 +25,7 @@
 				avatar.dataset.fallback = 'true';
 				avatar.src = defaultDonationAvatar;
 			});
-			avatar.src = name ? `https://mc-heads.net/avatar/${encodeURIComponent(name)}/32.png` : defaultDonationAvatar;
+			avatar.src = avatarUrl || defaultDonationAvatar;
 			return avatar;
 		};
 
@@ -58,14 +58,14 @@
 					row.append(rank);
 				}
 
-				row.append(createDonationAvatar(donation.name));
+				row.append(createDonationAvatar(donation.avatarUrl));
 
 				const info = document.createElement('div');
 				info.className = 'donation-info';
 
 				const name = document.createElement('div');
 				name.className = 'donation-name';
-				name.textContent = donation.name;
+				name.textContent = donation.gamertag;
 				info.append(name);
 
 				if (type === 'month') {

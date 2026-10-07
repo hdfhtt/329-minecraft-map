@@ -1,11 +1,9 @@
 [project]
 name = "bedrock-minedmap-local"
 version = "0.1.0"
-description = "Convert a Bedrock world with Amulet Core and render it with MinedMap"
+description = "Render a Bedrock world directly with the smol-kitten MinedMap fork"
 requires-python = ">=3.10,<3.14"
-dependencies = [
-    "amulet-core==1.9.45",
-]
-
-[project.scripts]
-convert-world = "scripts.convert_world:main"
+# The rendering pipeline shells out to the MinedMap binary and only uses the
+# Python standard library (serve.py, world_days.py), so there are no runtime
+# dependencies to install.
+dependencies = []

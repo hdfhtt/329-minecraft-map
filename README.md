@@ -1,22 +1,23 @@
 # Local Bedrock MinedMap
 
-This project converts the Bedrock world in `329/` to Java Anvil format with
-the open-source `amulet-core` library, then renders it with neocturne's
-MinedMap. The original world is never modified.
+This project renders the Bedrock world in `329/` directly with
+[smol-kitten's MinedMap fork](https://github.com/smol-kitten/MinedMap), which
+reads Bedrock LevelDB saves natively. No Bedrock-to-Java conversion step is
+needed, and the original world is never modified (MinedMap copies the LevelDB to
+a temporary directory before opening it).
 
-Amulet Core 1.9.45 is pinned because it contains the world conversion API.
-Its RocksDB extension requires a native CMake 4.1+ toolchain on Linux.
+The renderer is a standalone binary, so no Python packages are required; the
+helper scripts use only the Python standard library.
 
 ## Setup
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install --upgrade pip
-cmake --version  # must be 4.1 or newer
-python -m pip install -e .
 ./scripts/setup-minedmap.sh
 ```
+
+This downloads the MinedMap renderer binary and viewer from the fork's rolling
+`nightly` release into `tools/` and `output/viewer/`, then applies the project
+branding. `curl` and `unzip` are required.
 
 ## Render Locally
 
@@ -24,31 +25,19 @@ python -m pip install -e .
 ./scripts/render-and-serve.sh
 ```
 
-Open <http://127.0.0.1:8000/>. Stop the server with `Ctrl-C`.
-The combined command reuses `output/java-world/` when it already exists. Run
-`./scripts/convert.sh` explicitly when the Bedrock source changes.
+Open <http://127.0.0.1:8000/>. Stop the server with `Ctrl-C`. This renders
+`329/` straight into `output/viewer/data/` and serves the viewer.
 
 The individual stages can also be run separately:
 
 ```sh
-./scripts/convert.sh
 ./scripts/render.sh
 python3 scripts/serve.py --port 8000
 ```
 
-Set `MINEDMAP_JOBS` to control renderer parallelism. Set `--java-version`
-on `convert.sh` to select another Java translation target, for example:
-
-```sh
-./scripts/convert.sh --java-version 1.20.4
-```
-
-If conversion completed but Java metadata needs to be regenerated, repair it
-without converting chunks again:
-
-```sh
-./scripts/convert.sh --metadata-only
-```
+Set `MINEDMAP_JOBS` to control renderer parallelism (defaults to one thread per
+core). `render.sh` renders the overworld surface; edit its MinedMap invocation
+to add flags such as `--nether`/`--end` or extra map layers.
 
 ## Viewer Customization
 
@@ -180,21 +169,7 @@ Keep the backup until the new map has been checked. The source world, its
 archives, and local backups are data rather than project source and must not be
 committed to Git.
 
-### 2. Convert the new world
-
-Activate the project environment, then run a full conversion. Conversion
-replaces `output/java-world/`; `--metadata-only` is not sufficient for a world
-update.
-
-```sh
-. .venv/bin/activate
-./scripts/convert.sh
-```
-
-The conversion is complete when it reports `Conversion complete` and finishes
-updating the Java metadata without an error.
-
-### 3. Render a fresh viewer
+### 2. Render a fresh viewer
 
 Remove the old generated map data so tiles from areas that no longer exist do
 not remain in the viewer, then render the replacement world:
@@ -207,7 +182,7 @@ rm -rf output/viewer/data
 This preserves the MinedMap viewer application and regenerates its terrain
 tiles, metadata, and spawn location.
 
-### 4. Check the map locally
+### 3. Check the map locally
 
 ```sh
 python3 scripts/serve.py --port 8000
@@ -217,7 +192,7 @@ Open <http://127.0.0.1:8000/> and check the spawn location, several known
 landmarks, and the map boundaries. Stop the server with `Ctrl-C` after
 verification.
 
-### 5. Publish the result
+### 4. Publish the result
 
 Deploy the refreshed viewer to Azure:
 
@@ -226,24 +201,21 @@ Deploy the refreshed viewer to Azure:
 ```
 
 The script publishes `output/viewer/` without the local
-`output/viewer/data/processed/` rendering cache. It does not publish
-`output/java-world/`, `329/`, or a world archive.
+`output/viewer/data/processed/` rendering cache. It does not publish `329/` or a
+world archive.
 
 Updating the map does not require a Git commit because generated output and
 world data are intentionally kept out of the repository. Commit and push only
-when the conversion scripts, rendering settings, or documentation change.
-
-For later updates, do not rely on `render-and-serve.sh` alone: it deliberately
-reuses an existing `output/java-world/`. Always run `convert.sh` explicitly
-after replacing `329/`.
+when the rendering scripts, settings, or documentation change.
 
 ## Important Limitations
 
-Conversion depends on the translation data available in the installed
-Amulet Core release. Bedrock-only blocks, behavior packs, and custom resource
-pack content may be translated imperfectly or become unknown Java blocks.
-This setup renders terrain from Java Anvil data; it is not a Bedrock server.
+MinedMap renders the Bedrock overworld surface by reusing the Java Edition
+color tables: block identifiers are translated on the fly, blocks that cannot be
+mapped are drawn in neutral gray, and biome-tinted blocks (grass, foliage,
+water) use plains-biome values. Modded or behavior-pack content may therefore
+render imperfectly. This setup renders terrain only; it is not a Bedrock server.
 
 The server intentionally binds to `127.0.0.1`, so it is not reachable from
 other machines. Azure deployment can later replace this server with a cloud
-static-file host without changing the conversion or rendering stages.
+static-file host without changing the rendering stage.

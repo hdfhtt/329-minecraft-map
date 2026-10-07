@@ -4,8 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BIN_DIR="$ROOT_DIR/tools"
 VIEWER_DIR="$ROOT_DIR/output/viewer"
-VERSION="2.8.0"
-BASE_URL="https://github.com/neocturne/MinedMap/releases/download/v${VERSION}"
+# smol-kitten's fork renders Bedrock worlds directly from their LevelDB, so no
+# Bedrock-to-Java conversion is needed. It publishes a rolling "nightly" release
+# whose asset names carry no version (hence the double dash).
+RELEASE="nightly"
+BASE_URL="https://github.com/smol-kitten/MinedMap/releases/download/${RELEASE}"
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
@@ -15,10 +18,10 @@ command -v unzip >/dev/null || { echo "unzip is required" >&2; exit 1; }
 mkdir -p "$BIN_DIR" "$VIEWER_DIR"
 
 curl --fail --location --show-error --silent \
-  "$BASE_URL/MinedMap-${VERSION}-x86_64-unknown-linux-gnu.zip" \
+  "$BASE_URL/MinedMap--x86_64-unknown-linux-gnu.zip" \
   --output "$WORK_DIR/minedmap.zip"
 curl --fail --location --show-error --silent \
-  "$BASE_URL/MinedMap-${VERSION}-viewer.zip" \
+  "$BASE_URL/MinedMap--viewer.zip" \
   --output "$WORK_DIR/viewer.zip"
 
 unzip -o "$WORK_DIR/minedmap.zip" -d "$WORK_DIR/bin" >/dev/null
@@ -42,4 +45,4 @@ cp -a "$VIEWER_ROOT"/. "$VIEWER_DIR"/
 # Restore the custom title and favicon over the stock MinedMap viewer.
 "$ROOT_DIR/scripts/brand-viewer.sh" "$VIEWER_DIR"
 
-echo "Installed MinedMap ${VERSION} in $BIN_DIR and $VIEWER_DIR"
+echo "Installed MinedMap (${RELEASE}) in $BIN_DIR and $VIEWER_DIR"

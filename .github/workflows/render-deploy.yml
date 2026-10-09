@@ -1,0 +1,150 @@
+name: Render and deploy map
+
+# Renders the latest Bedrock world backup and publishes the viewer to Azure
+# Static Web Apps. Triggered automatically by the 329-minecraft-api backup
+# function (repository_dispatch: map-backup) once a fresh backup lands in Blob
+# storage, or manually from the Actions tab.
+on:
+  repository_dispatch:
+    types: [map-backup]
+  workflow_dispatch:
+    inputs:
+      blob:
+        description: 'Backup blob name (e.g. map_20261009.tar.gz). Leave blank for the newest.'
+        required: false
+        type: string
+
+# A deploy publishes the whole production environment, so never let two runs
+# race one another; a newer backup simply supersedes an in-flight render.
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+# OIDC federated login needs id-token; checkout needs contents.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  STORAGE_ACCOUNT: minecraftwith3298eeb
+  BACKUP_CONTAINER: map-backups
+
+jobs:
+  render-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install render tooling
+        run: sudo apt-get update && sudo apt-get install -y curl unzip
+
+      - name: Log in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve backup blob name
+        id: blob
+        env:
+          # client_payload.blob is set by the backup function; the manual input
+          # wins when provided; otherwise fall back to the newest map_ blob.
+          DISPATCH_BLOB: ${{ github.event.client_payload.blob }}
+          INPUT_BLOB: ${{ github.event.inputs.blob }}
+        run: |
+          set -euo pipefail
+          name="${INPUT_BLOB:-$DISPATCH_BLOB}"
+          if [ -z "$name" ]; then
+            echo "No blob supplied; selecting the newest map_ backup."
+            name="$(az storage blob list \
+              --account-name "$STORAGE_ACCOUNT" \
+              --container-name "$BACKUP_CONTAINER" \
+              --prefix map_ \
+              --auth-mode login \
+              --query "sort_by([], &properties.lastModified)[-1].name" \
+              --output tsv)"
+          fi
+          if [ -z "$name" ] || [ "$name" = "None" ]; then
+            echo "::error::No backup blob found in $BACKUP_CONTAINER." >&2
+            exit 1
+          fi
+          echo "Using backup blob: $name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Download backup
+        run: |
+          set -euo pipefail
+          az storage blob download \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$BACKUP_CONTAINER" \
+            --name "${{ steps.blob.outputs.name }}" \
+            --file backup.tar.gz \
+            --auth-mode login
+
+      - name: Extract world into 329/
+        run: |
+          set -euo pipefail
+          rm -rf extract 329
+          mkdir extract
+          tar -xzf backup.tar.gz -C extract
+          # The archive layout varies; locate the directory that holds both
+          # level.dat and db/ rather than assuming a fixed path.
+          level="$(find extract -type f -name level.dat -print -quit)"
+          if [ -z "$level" ]; then
+            echo "::error::level.dat not found in backup archive." >&2
+            exit 1
+          fi
+          world="$(dirname "$level")"
+          if [ ! -d "$world/db" ]; then
+            echo "::error::db/ not found alongside level.dat in $world." >&2
+            exit 1
+          fi
+          cp -a "$world" 329
+          test -f 329/level.dat && test -d 329/db
+          echo "World placed at 329/ (from $world)."
+
+      - name: Install MinedMap
+        run: |
+          set -euo pipefail
+          release="nightly"
+          base="https://github.com/smol-kitten/MinedMap/releases/download/${release}"
+          work="$(mktemp -d)"
+          mkdir -p tools output/viewer
+          curl --fail --location --show-error --silent \
+            "$base/MinedMap--x86_64-unknown-linux-gnu.zip" --output "$work/minedmap.zip"
+          curl --fail --location --show-error --silent \
+            "$base/MinedMap--viewer.zip" --output "$work/viewer.zip"
+          unzip -o "$work/minedmap.zip" -d "$work/bin" >/dev/null
+          bin="$(find "$work/bin" -type f -name minedmap -print -quit)"
+          if [ -z "$bin" ]; then
+            echo "::error::minedmap binary not found in release archive." >&2
+            exit 1
+          fi
+          install -m 0755 "$bin" tools/minedmap
+          unzip -q "$work/viewer.zip" -d "$work/viewer"
+          root="$(find "$work/viewer" -type f -name index.html -printf '%h\n' -quit)"
+          if [ -z "$root" ]; then
+            echo "::error::index.html not found in viewer archive." >&2
+            exit 1
+          fi
+          cp -a "$root"/. output/viewer/
+          rm -rf "$work"
+
+      - name: Render map
+        run: |
+          set -euo pipefail
+          mkdir -p output/viewer/data
+          tools/minedmap 329 output/viewer/data \
+            --edition bedrock \
+            --image-format webp \
+            -j "$(nproc)"
+
+      - name: Deploy to Azure Static Web Apps
+        env:
+          SWA_CLI_DEPLOYMENT_TOKEN: ${{ secrets.SWA_CLI_DEPLOYMENT_TOKEN }}
+          POI_API_URL: ${{ vars.POI_API_URL }}
+          REGION_API_URL: ${{ vars.REGION_API_URL }}
+          DONATION_API_URL: ${{ vars.DONATION_API_URL }}
+        run: ./scripts/deploy.sh

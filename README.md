@@ -1,43 +1,84 @@
-# Local Bedrock MinedMap
+# Minecraft with 329 Map
 
-This project renders the Bedrock world in `329/` directly with
+This project renders the Bedrock world with
 [smol-kitten's MinedMap fork](https://github.com/smol-kitten/MinedMap), which
-reads Bedrock LevelDB saves natively. No Bedrock-to-Java conversion step is
-needed, and the original world is never modified (MinedMap copies the LevelDB to
-a temporary directory before opening it).
+reads Bedrock LevelDB saves natively, and publishes the viewer to an Azure
+Static Web App. No Bedrock-to-Java conversion step is needed, and the source
+world is never modified (MinedMap copies the LevelDB to a temporary directory
+before opening it).
 
-The renderer is a standalone binary, so no Python packages are required; the
-helper scripts use only the Python standard library.
+Rendering runs in GitHub Actions, not on a local machine. The companion
+`329-minecraft-api` Azure Function takes a daily world backup, uploads it to
+Azure Blob storage, and fires a `repository_dispatch` that triggers the render
+workflow here. The renderer is a standalone binary, and `scripts/brand-viewer.sh`
+uses only the Python standard library.
 
-## Setup
+## Automated Render and Deploy
+
+`.github/workflows/render-deploy.yml` renders and deploys on an
+`ubuntu-latest` runner. It runs when:
+
+- the backup function sends a `repository_dispatch` of type `map-backup` after a
+  fresh backup lands in Blob storage, or
+- it is started manually from the **Actions** tab (`workflow_dispatch`), with an
+  optional `blob` input to pick a specific backup (newest is used when blank).
+
+Each run logs in to Azure with OIDC, downloads the backup blob, extracts the
+world into `329/`, installs the MinedMap `nightly` renderer and viewer, renders
+the overworld surface into `output/viewer/data/`, and deploys through
+`scripts/deploy.sh`.
+
+### One-time setup
+
+The workflow authenticates to Azure Blob storage with OIDC (no stored
+credential) and needs a federated app registration with read access to the
+backup container.
 
 ```sh
-./scripts/setup-minedmap.sh
+RG=minecraft-with-329
+STORAGE=minecraftwith3298eeb
+SUB="$(az account show --query id -o tsv)"
+
+APP_ID="$(az ad app create --display-name 329-map-render --query appId -o tsv)"
+az ad sp create --id "$APP_ID"
+
+az ad app federated-credential create --id "$APP_ID" --parameters '{
+  "name": "gh-329-minecraft-map-main",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:hdfhtt/329-minecraft-map:ref:refs/heads/main",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+
+az role assignment create --assignee "$APP_ID" \
+  --role "Storage Blob Data Reader" \
+  --scope "/subscriptions/$SUB/resourceGroups/$RG/providers/Microsoft.Storage/storageAccounts/$STORAGE"
 ```
 
-This downloads the MinedMap renderer binary and viewer from the fork's rolling
-`nightly` release into `tools/` and `output/viewer/`, then applies the project
-branding. `curl` and `unzip` are required.
+`repository_dispatch` always runs on the default branch, so the single
+`ref:refs/heads/main` subject covers both the automatic dispatch and a manual
+run from `main`.
 
-## Render Locally
+Then add the GitHub **secrets** on `hdfhtt/329-minecraft-map`:
 
-```sh
-./scripts/render-and-serve.sh
+```text
+AZURE_CLIENT_ID=<$APP_ID>
+AZURE_TENANT_ID=<az account show --query tenantId -o tsv>
+AZURE_SUBSCRIPTION_ID=<$SUB>
+SWA_CLI_DEPLOYMENT_TOKEN=<Static Web App deployment token>
 ```
 
-Open <http://127.0.0.1:8000/>. Stop the server with `Ctrl-C`. This renders
-`329/` straight into `output/viewer/data/` and serves the viewer.
+and the GitHub **variables** (the overlay endpoints are public and read-only, so
+they are variables rather than secrets):
 
-The individual stages can also be run separately:
-
-```sh
-./scripts/render.sh
-python3 scripts/serve.py --port 8000
+```text
+POI_API_URL=https://<your-function-app>.azurewebsites.net/api/pois
+REGION_API_URL=https://<your-function-app>.azurewebsites.net/api/regions
+DONATION_API_URL=https://<your-function-app>.azurewebsites.net/api/donations
 ```
 
-Set `MINEDMAP_JOBS` to control renderer parallelism (defaults to one thread per
-core). `render.sh` renders the overworld surface; edit its MinedMap invocation
-to add flags such as `--nether`/`--end` or extra map layers.
+The storage account and container are workflow `env` constants
+(`minecraftwith3298eeb` / `map-backups`); change them there if the backup
+location moves.
 
 ## Viewer Customization
 
@@ -55,9 +96,8 @@ the label/control styles live at `assets/regions.css`.
 All are committed to Git. Each region has a distinct tinted fill and a permanent
 pixel-style label.
 
-`scripts/setup-minedmap.sh` applies the branding after it installs the viewer,
-and `scripts/render.sh` refreshes it after each successful render. To reapply the
-branding to an existing `output/viewer/` without reinstalling MinedMap:
+`scripts/brand-viewer.sh` applies the branding after each render. To reapply it
+to an existing `output/viewer/` without re-rendering:
 
 ```sh
 ./scripts/brand-viewer.sh
@@ -80,133 +120,66 @@ to see a changed icon.
 
 ### Discord POIs
 
-The map can show live `Points of Interest`, `Regions`, and `Donations` overlays
+The map shows live `Points of Interest`, `Regions`, and `Donations` overlays
 supplied by the companion `329-minecraft-api` Azure Function. The endpoints are
-intentionally not committed. When publishing after the bot API is deployed,
-either set them for that deployment:
+intentionally not committed; they are supplied through the GitHub variables
+above (or through the environment for a manual deploy). An empty value simply
+leaves the matching overlay empty. The API URLs are public and read-only;
+Discord command authorization remains in the Azure Function.
 
-```sh
-POI_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/pois' \
-REGION_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/regions' \
-DONATION_API_URL='https://YOUR-FUNCTION.azurewebsites.net/api/donations' \
-./scripts/deploy.sh
-```
+## Manual Deploy
 
-Use the same variables with `scripts/brand-viewer.sh` when testing locally. An
-empty value simply leaves the matching overlay empty. The API URLs are public and
-read-only; Discord command authorization remains in the Azure Function.
-
-For repeated deploys, copy `.env.example` to `.env` and fill in the URLs there.
-`scripts/deploy.sh` loads `.env` automatically, and `.env` is ignored by Git.
-
-## Deploy to Azure
+`scripts/deploy.sh` is the shared deploy path used by both the workflow and
+local operators. Use it to republish an already-rendered `output/viewer/`
+without waiting for a backup — for example after editing the viewer assets.
 
 Create an Azure Static Web App with the Free plan and `Other` as its deployment
-source. Copy its deployment token from **Overview > Manage deployment token**,
-then create a local environment file:
+source, then copy its deployment token from
+**Overview > Manage deployment token**. Provide the token and overlay URLs
+through a local environment file:
 
 ```sh
 cp .env.example .env
 ```
 
-Edit `.env` with the Function App URLs and Static Web App deployment token. Then
+Edit `.env` with the Function App URLs and Static Web App deployment token, then
 run:
 
 ```sh
 ./scripts/deploy.sh
 ```
 
-If `.env` does not define `SWA_CLI_DEPLOYMENT_TOKEN`, paste the token at the
-hidden prompt. The script validates the rendered viewer, applies the project
-branding, creates a temporary deployment package, excludes the local
-`data/processed/` rendering cache, and publishes to the production environment.
-The temporary package and interactively entered token are removed when the script
-exits.
+`scripts/deploy.sh` loads `.env` automatically, and `.env` is ignored by Git. If
+`.env` does not define `SWA_CLI_DEPLOYMENT_TOKEN`, paste the token at the hidden
+prompt. The script validates the rendered viewer, applies the project branding,
+creates a temporary deployment package, excludes the local `data/processed/`
+rendering cache, and publishes to the production environment. The temporary
+package and interactively entered token are removed when the script exits.
 
-For unattended use, provide the token through the environment:
-
-```sh
-SWA_CLI_DEPLOYMENT_TOKEN='your-secret-token' ./scripts/deploy.sh
-```
-
-Never commit the deployment token. Pushing source changes to Azure Repos does
-not publish the generated viewer; run `deploy.sh` whenever the rendered map or
-viewer branding changes.
-
-## Update the World Map
-
-Use this procedure when a newer Bedrock world export is available. The source
-world must be a complete, closed export; do not copy it while Minecraft or a
-Bedrock server is still writing to it.
-
-### 1. Prepare the replacement world
-
-Extract the new export outside this project first. Its world directory must
-contain both `level.dat` and a `db/` directory:
+For unattended use, provide the values through the environment:
 
 ```sh
-NEW_WORLD=/absolute/path/to/the/extracted/world
-test -f "$NEW_WORLD/level.dat"
-test -d "$NEW_WORLD/db"
-```
-
-Replace `329/` as a complete directory. Do not merge or copy a new LevelDB
-`db/` over the old one because files removed from the new world could otherwise
-remain in the source:
-
-```sh
-rm -rf 329.new
-cp -a "$NEW_WORLD" 329.new
-test -f 329.new/level.dat
-test -d 329.new/db
-
-BACKUP="329.backup-$(date +%Y%m%d-%H%M%S)"
-mv 329 "$BACKUP"
-mv 329.new 329
-```
-
-Keep the backup until the new map has been checked. The source world, its
-archives, and local backups are data rather than project source and must not be
-committed to Git.
-
-### 2. Render a fresh viewer
-
-Remove the old generated map data so tiles from areas that no longer exist do
-not remain in the viewer, then render the replacement world:
-
-```sh
-rm -rf output/viewer/data
-./scripts/render.sh
-```
-
-This preserves the MinedMap viewer application and regenerates its terrain
-tiles, metadata, and spawn location.
-
-### 3. Check the map locally
-
-```sh
-python3 scripts/serve.py --port 8000
-```
-
-Open <http://127.0.0.1:8000/> and check the spawn location, several known
-landmarks, and the map boundaries. Stop the server with `Ctrl-C` after
-verification.
-
-### 4. Publish the result
-
-Deploy the refreshed viewer to Azure:
-
-```sh
+SWA_CLI_DEPLOYMENT_TOKEN='your-secret-token' \
+POI_API_URL='https://<your-function-app>.azurewebsites.net/api/pois' \
+REGION_API_URL='https://<your-function-app>.azurewebsites.net/api/regions' \
+DONATION_API_URL='https://<your-function-app>.azurewebsites.net/api/donations' \
 ./scripts/deploy.sh
 ```
 
-The script publishes `output/viewer/` without the local
-`output/viewer/data/processed/` rendering cache. It does not publish `329/` or a
-world archive.
+A manual deploy requires an already-rendered `output/viewer/` with
+`data/info.json`; the automated workflow produces this from the latest backup.
+Never commit the deployment token.
 
-Updating the map does not require a Git commit because generated output and
-world data are intentionally kept out of the repository. Commit and push only
-when the rendering scripts, settings, or documentation change.
+## Updating the World Map
+
+Updating the map is automatic: a new Bedrock world on the server is captured by
+the next daily backup, which dispatches this workflow to render and deploy it.
+To force a refresh from the most recent backup without waiting, start the
+**Render and deploy map** workflow manually from the Actions tab.
+
+Generated output and world data are intentionally kept out of the repository.
+Commit and push only when the workflow, viewer assets, deploy script, or
+documentation change.
 
 ## Important Limitations
 
@@ -215,7 +188,3 @@ color tables: block identifiers are translated on the fly, blocks that cannot be
 mapped are drawn in neutral gray, and biome-tinted blocks (grass, foliage,
 water) use plains-biome values. Modded or behavior-pack content may therefore
 render imperfectly. This setup renders terrain only; it is not a Bedrock server.
-
-The server intentionally binds to `127.0.0.1`, so it is not reachable from
-other machines. Azure deployment can later replace this server with a cloud
-static-file host without changing the rendering stage.

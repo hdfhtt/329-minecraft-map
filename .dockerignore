@@ -1,0 +1,17 @@
+# Keep secrets and local/generated artifacts out of the image. The image is
+# pushed to a public registry, so .env (deployment token) must never be baked in;
+# it is supplied as a Container Apps Job secret at runtime instead.
+.env
+.env.*
+!.env.example
+.git
+.github
+.venv*
+__pycache__
+output
+tools
+329
+329.backup-*
+map_*.tar.gz
+*.egg-info
+README.md

@@ -5,8 +5,10 @@
 FROM node:20-bookworm-slim
 
 # Tools: az CLI (blob pull + managed-identity login), plus curl/unzip/tar/git.
+# libicu72 is required by the Static Web Apps CLI's StaticSitesClient (.NET) for
+# ICU globalization; without it the deploy aborts with "valid ICU package" errors.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl unzip tar git ca-certificates python3 \
+  && apt-get install -y --no-install-recommends curl unzip tar git ca-certificates python3 libicu72 \
   && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*

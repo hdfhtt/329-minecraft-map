@@ -73,7 +73,8 @@ az containerapp job create -g "$RG" -n "$JOB" --environment "$ENVNAME" \
     SWA_CLI_DEPLOYMENT_TOKEN=secretref:swa-token \
     POI_API_URL=https://<your-function-app>.azurewebsites.net/api/pois \
     REGION_API_URL=https://<your-function-app>.azurewebsites.net/api/regions \
-    DONATION_API_URL=https://<your-function-app>.azurewebsites.net/api/donations
+    DONATION_API_URL=https://<your-function-app>.azurewebsites.net/api/donations \
+    HOME_API_URL=https://<your-function-app>.azurewebsites.net/api/homes
 ```
 
 **3. Grant the job's identity read access to the backup container:**
@@ -129,11 +130,14 @@ refresh or a private window to see a changed icon.
 
 ### Discord POIs
 
-The map shows live `Points of Interest`, `Regions`, and `Donations` overlays
-supplied by the companion `329-minecraft-api` Azure Function. The endpoints are
-intentionally not committed; they are supplied to the render through the
-Container Apps Job's `POI_API_URL`, `REGION_API_URL`, and `DONATION_API_URL`
-environment variables. An empty value simply leaves the matching overlay empty.
+The map shows live `Points of Interest`, `Regions`, `Donations`, and `Homes`
+overlays supplied by the companion `329-minecraft-api` Azure Function. The
+endpoints are intentionally not committed; they are supplied to the render
+through the Container Apps Job's `POI_API_URL`, `REGION_API_URL`,
+`DONATION_API_URL`, and `HOME_API_URL` environment variables. An empty value
+simply leaves the matching overlay empty. The `Homes` overlay shows each
+registered player's house (set with the Discord `/home x z` command) as a
+pixel-house marker labelled with the player's gamertag and Minecraft head.
 The API URLs are public and read-only; Discord command authorization remains in
 the Azure Function.
 

@@ -8,6 +8,7 @@ REGIONS="$ROOT_DIR/assets/regions.js"
 COORDINATES="$ROOT_DIR/assets/coordinates.js"
 REGION_STYLE="$ROOT_DIR/assets/regions.css"
 POIS="$ROOT_DIR/assets/pois.js"
+HOMES="$ROOT_DIR/assets/homes.js"
 DONATIONS="$ROOT_DIR/assets/donations.js"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
@@ -23,6 +24,7 @@ TITLE="Minecraft with 329"
 [[ -f "$COORDINATES" ]] || { echo "Coordinate initialization not found: $COORDINATES" >&2; exit 1; }
 [[ -f "$REGION_STYLE" ]] || { echo "Region stylesheet not found: $REGION_STYLE" >&2; exit 1; }
 [[ -f "$POIS" ]] || { echo "POI definitions not found: $POIS" >&2; exit 1; }
+[[ -f "$HOMES" ]] || { echo "Home definitions not found: $HOMES" >&2; exit 1; }
 [[ -f "$DONATIONS" ]] || { echo "Donation panel definitions not found: $DONATIONS" >&2; exit 1; }
 
 # Install the custom favicon alongside the viewer and remove any stale variants.
@@ -65,6 +67,13 @@ sed -i "s|__POI_API_URL__|${POI_API_URL:-}|g" "$SCRIPT"
 sed -i '/\/\/ BEGIN 329 DONATIONS/,/\/\/ END 329 DONATIONS/d' "$SCRIPT"
 sed -i "/\/\/ END 329 POIS/r $DONATIONS" "$SCRIPT"
 sed -i "s|__DONATION_API_URL__|${DONATION_API_URL:-}|g" "$SCRIPT"
+
+# Add the player Homes overlay below the donation panel. Like the other public
+# API URLs, the endpoint is supplied per deployment and omitted from committed
+# viewer assets; an empty value leaves the overlay empty.
+sed -i '/\/\/ BEGIN 329 HOMES/,/\/\/ END 329 HOMES/d' "$SCRIPT"
+sed -i "/\/\/ END 329 DONATIONS/r $HOMES" "$SCRIPT"
+sed -i "s|__HOME_API_URL__|${HOME_API_URL:-}|g" "$SCRIPT"
 
 # Show the initial map center before the visitor moves a mouse or touches the map.
 sed -i '/\/\/ BEGIN 329 COORDINATES/,/\/\/ END 329 COORDINATES/d' "$SCRIPT"

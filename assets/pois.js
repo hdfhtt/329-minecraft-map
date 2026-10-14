@@ -27,7 +27,7 @@
 							iconAnchor: [9, 9],
 							popupAnchor: [0, -11],
 						}),
-					}).bindPopup(`<strong>${escapeHtml(poi.name)}</strong><br>X ${poi.x}, Z ${poi.z}`).addTo(poiLayer);
+					}).bindPopup(`<strong>${escapeHtml(poi.name)}</strong><br>X ${poi.x}, Z ${poi.z}`).bindTooltip(escapeHtml(poi.name), { direction: 'top', offset: [0, -8], opacity: 1, className: 'marker-tooltip' }).addTo(poiLayer);
 				});
 			}).catch(function(error) {
 				console.warn('Unable to load map POIs.', error);

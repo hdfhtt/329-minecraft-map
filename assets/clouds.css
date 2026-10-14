@@ -1,0 +1,75 @@
+/* Opaque fog-of-war cloud layer. One seamless texture is mapped continuously
+   across a PERIOD x PERIOD block of Leaflet tiles (see clouds.js): each tile
+   draws the texture at `--period-pct` of its own size and offsets it by its
+   slice (`--cx`/`--cy`), so the cloud field flows across tile boundaries and
+   the visible repeat period grows well beyond a single 512px tile. The layer
+   sits below the terrain tile pane, so it shows only in unexplored void and
+   never touches terrain. */
+
+.cloud-tile {
+	background-repeat: repeat;
+	/* --period-pct is set on the cloud pane and inherited here. */
+	background-size: var(--period-pct, 100%) var(--period-pct, 100%);
+	/* Static per-tile slice offset (--cx/--cy); drift is a transform on the
+	   pane, so the background itself never re-samples. */
+	background-position: var(--cx, 0px) var(--cy, 0px);
+	/* Keep the blocky Minecraft-cloud pixels crisp when the small source
+	   texture is upscaled across the tile block at every zoom. */
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+}
+
+/* Opaque cloudscape filling the unexplored void (below the terrain tiles). */
+.cloud-tile-base {
+	background-image: url(clouds-base.png);
+}
+
+/* Cloud-coloured backdrop behind the cloud tiles, painted on the map container
+   (the very back layer) and visible only where no opaque terrain covers it —
+   i.e. the void. It hides the thin subpixel seams between GridLayer tiles and
+   the un-tiled edge the drift transform briefly exposes; both would otherwise
+   show the black map background. Toggled with the Clouds overlay, so turning
+   clouds off restores the stock black void. */
+.leaflet-container.clouds-active {
+	background: #e6edfa;
+}
+
+/* Soft, translucent cloud fringe laid over the discovered edge (see the
+   #cloud-fringe SVG filter in clouds.js). Scoped to the terrain tile pane (the
+   cloud layer lives in its own pane) and toggled with the Clouds overlay. */
+.clouds-active .leaflet-tile-pane {
+	filter: url(#cloud-fringe);
+}
+
+/* Drift the whole cloud pane with a GPU transform. The pixel blocks are already
+   rasterized, so the compositor slides them smoothly (no background re-sampling,
+   hence no quantized stutter). The loop distance is exactly one texture period
+   (--drift-span = CLOUD_PERIOD tiles), so the field at the end aligns with the
+   start and the reset is invisible. */
+.cloud-pane-drift {
+	animation: cloud-drift 180s linear infinite;
+	will-change: transform;
+}
+
+@keyframes cloud-drift {
+	from { transform: translate3d(0, 0, 0); }
+	to   { transform: translate3d(calc(-1 * var(--drift-span, 2048px)), 0, 0); }
+}
+
+/* While Leaflet runs its zoom transform, hold the drift still and suspend the
+   fringe filter so neither fights the zoom animation. The `clouds-zooming` class
+   is set on the container, so both the pane drift and the tile-pane filter are
+   reachable as descendants. */
+.clouds-zooming .cloud-pane-drift {
+	animation-play-state: paused;
+}
+
+.clouds-active.clouds-zooming .leaflet-tile-pane {
+	filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cloud-pane-drift {
+		animation: none;
+	}
+}

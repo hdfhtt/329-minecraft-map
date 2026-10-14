@@ -10,6 +10,9 @@ REGION_STYLE="$ROOT_DIR/assets/regions.css"
 POIS="$ROOT_DIR/assets/pois.js"
 HOMES="$ROOT_DIR/assets/homes.js"
 DONATIONS="$ROOT_DIR/assets/donations.js"
+CLOUDS="$ROOT_DIR/assets/clouds.js"
+CLOUD_STYLE="$ROOT_DIR/assets/clouds.css"
+CLOUD_BASE_TEX="$ROOT_DIR/assets/clouds-base.png"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
 INFO="$VIEWER_DIR/data/info.json"
@@ -26,6 +29,9 @@ TITLE="Minecraft with 329"
 [[ -f "$POIS" ]] || { echo "POI definitions not found: $POIS" >&2; exit 1; }
 [[ -f "$HOMES" ]] || { echo "Home definitions not found: $HOMES" >&2; exit 1; }
 [[ -f "$DONATIONS" ]] || { echo "Donation panel definitions not found: $DONATIONS" >&2; exit 1; }
+[[ -f "$CLOUDS" ]] || { echo "Cloud overlay definitions not found: $CLOUDS" >&2; exit 1; }
+[[ -f "$CLOUD_STYLE" ]] || { echo "Cloud stylesheet not found: $CLOUD_STYLE" >&2; exit 1; }
+[[ -f "$CLOUD_BASE_TEX" ]] || { echo "Cloud base texture not found: $CLOUD_BASE_TEX" >&2; exit 1; }
 
 # Install the custom favicon alongside the viewer and remove any stale variants.
 cp -f "$ASSET" "$VIEWER_DIR/favicon.ico"
@@ -45,6 +51,14 @@ cp -f "$REGION_STYLE" "$VIEWER_DIR/regions.css"
 rm -f "$VIEWER_DIR/anonymous-player.svg"
 sed -i '/href="regions.css"/d' "$INDEX"
 sed -i '/leaflet-1\.9\.4\/leaflet\.css/a\    <link rel="stylesheet" href="regions.css" />' "$INDEX"
+
+# Install the cloud overlay stylesheet and its seamless textures, then link the
+# stylesheet right after regions.css. Replace the link on each run (idempotent).
+cp -f "$CLOUD_STYLE" "$VIEWER_DIR/clouds.css"
+cp -f "$CLOUD_BASE_TEX" "$VIEWER_DIR/clouds-base.png"
+rm -f "$VIEWER_DIR/clouds-wisp.png"
+sed -i '/href="clouds.css"/d' "$INDEX"
+sed -i '/href="regions.css"/a\    <link rel="stylesheet" href="clouds.css" />' "$INDEX"
 
 # Add the named regions to the stock layer control. Remove a prior injection so
 # rerunning this script does not duplicate the regions.
@@ -74,6 +88,11 @@ sed -i "s|__DONATION_API_URL__|${DONATION_API_URL:-}|g" "$SCRIPT"
 sed -i '/\/\/ BEGIN 329 HOMES/,/\/\/ END 329 HOMES/d' "$SCRIPT"
 sed -i "/\/\/ END 329 DONATIONS/r $HOMES" "$SCRIPT"
 sed -i "s|__HOME_API_URL__|${HOME_API_URL:-}|g" "$SCRIPT"
+
+# Add the default-on Clouds overlay (fog of war over unexplored terrain) below
+# the other overlays. Remove any prior injection so reruns do not duplicate it.
+sed -i '/\/\/ BEGIN 329 CLOUDS/,/\/\/ END 329 CLOUDS/d' "$SCRIPT"
+sed -i "/\/\/ END 329 HOMES/r $CLOUDS" "$SCRIPT"
 
 # Show the initial map center before the visitor moves a mouse or touches the map.
 sed -i '/\/\/ BEGIN 329 COORDINATES/,/\/\/ END 329 COORDINATES/d' "$SCRIPT"

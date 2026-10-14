@@ -22,7 +22,7 @@
 					L.marker([-poi.z, poi.x], {
 						icon: L.divIcon({
 							className: 'poi-marker-icon',
-							html: '<span class="poi-marker-core"></span>',
+							html: '<svg class="poi-marker-svg" viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0.5 15.5 8 8 15.5 0.5 8Z"/><path d="M8 3 13 8 8 13 3 8Z" fill="none" stroke="rgba(255,253,242,0.42)" stroke-width="1"/></svg>',
 							iconSize: [18, 18],
 							iconAnchor: [9, 9],
 							popupAnchor: [0, -11],

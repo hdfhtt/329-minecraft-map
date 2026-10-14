@@ -129,7 +129,7 @@
 }
 
 /* Player homes: a solid amber house glyph in the same sign palette as the POI
-   diamond, anchored at its base so it sits on the stored coordinate. */
+   pin, anchored at its base so it sits on the stored coordinate. */
 .leaflet-container .home-marker-icon {
   width: 22px;
   height: 22px;

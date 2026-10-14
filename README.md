@@ -136,8 +136,8 @@ endpoints are intentionally not committed; they are supplied to the render
 through the Container Apps Job's `POI_API_URL`, `REGION_API_URL`,
 `DONATION_API_URL`, and `HOME_API_URL` environment variables. An empty value
 simply leaves the matching overlay empty. The `Homes` overlay shows each
-registered player's house (set with the Discord `/home x z` command) as a
-pixel-house marker labelled with the player's gamertag and Minecraft head.
+registered player's house (set with the Discord `/home x z` command) as an
+amber house marker labelled with the player's gamertag and Minecraft head.
 The API URLs are public and read-only; Discord command authorization remains in
 the Azure Function.
 

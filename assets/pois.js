@@ -22,12 +22,12 @@
 					L.marker([-poi.z, poi.x], {
 						icon: L.divIcon({
 							className: 'poi-marker-icon',
-							html: '<svg class="poi-marker-svg" viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0.5 15.5 8 8 15.5 0.5 8Z"/><path d="M8 3 13 8 8 13 3 8Z" fill="none" stroke="rgba(255,253,242,0.42)" stroke-width="1"/></svg>',
+							html: '<svg class="poi-marker-svg" viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>',
 							iconSize: [18, 18],
-							iconAnchor: [9, 9],
-							popupAnchor: [0, -11],
+							iconAnchor: [9, 18],
+							popupAnchor: [0, -18],
 						}),
-					}).bindPopup(`<strong>${escapeHtml(poi.name)}</strong><br>X ${poi.x}, Z ${poi.z}`).bindTooltip(escapeHtml(poi.name), { direction: 'top', offset: [0, -8], opacity: 1, className: 'marker-tooltip' }).addTo(poiLayer);
+					}).bindPopup(`<strong>${escapeHtml(poi.name)}</strong><br>X ${poi.x}, Z ${poi.z}`).bindTooltip(escapeHtml(poi.name), { direction: 'top', offset: [0, -16], opacity: 1, className: 'marker-tooltip' }).addTo(poiLayer);
 				});
 			}).catch(function(error) {
 				console.warn('Unable to load map POIs.', error);

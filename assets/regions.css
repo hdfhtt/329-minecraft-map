@@ -163,19 +163,6 @@
   filter: drop-shadow(0 0 5px rgba(231, 154, 32, 0.85));
 }
 
-.leaflet-container .home-popup {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.leaflet-container .home-popup-head {
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 253, 242, 0.7);
-  image-rendering: pixelated;
-}
-
 /* Leaflet's stock controls use the same panel language as the region labels. */
 .leaflet-container {
   --map-ui-color: #d58c2b;

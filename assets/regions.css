@@ -598,6 +598,28 @@
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.72);
 }
 
+/* Hover tooltips on home and POI markers, in the same sign palette as the
+   region labels and controls. Original case (not uppercased). */
+.leaflet-container .leaflet-tooltip.marker-tooltip {
+  padding: 4px 7px;
+  border: 2px solid var(--map-ui-color);
+  border-radius: 0;
+  background: var(--map-ui-background);
+  box-shadow: var(--map-ui-shadow), var(--map-ui-inset);
+  color: var(--map-ui-text);
+  font-family: ui-monospace, "Cascadia Mono", "DejaVu Sans Mono", "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+}
+
+.leaflet-container .leaflet-tooltip.marker-tooltip.leaflet-tooltip-top::before {
+  border-top-color: var(--map-ui-color);
+}
+
 .leaflet-container a.leaflet-popup-close-button,
 .leaflet-container a.leaflet-popup-close-button:hover,
 .leaflet-container a.leaflet-popup-close-button:focus {

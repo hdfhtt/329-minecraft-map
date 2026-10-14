@@ -30,7 +30,7 @@
 							iconAnchor: [11, 21],
 							popupAnchor: [0, -20],
 						}),
-					}).bindPopup(`<div class="home-popup">${avatar}<div class="home-popup-text"><strong>${escapeHomeHtml(home.gamertag)}</strong><br>X ${home.x}, Z ${home.z}</div></div>`).addTo(homeLayer);
+					}).bindPopup(`<div class="home-popup">${avatar}<div class="home-popup-text"><strong>${escapeHomeHtml(home.gamertag)}</strong><br>X ${home.x}, Z ${home.z}</div></div>`).bindTooltip(`${escapeHomeHtml(home.gamertag)}&#39;s House`, { direction: 'top', offset: [0, -18], opacity: 1, className: 'marker-tooltip' }).addTo(homeLayer);
 				});
 			}).catch(function(error) {
 				console.warn('Unable to load homes.', error);

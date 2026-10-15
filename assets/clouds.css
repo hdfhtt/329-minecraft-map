@@ -24,15 +24,12 @@
 	background-image: url(clouds-base.png);
 }
 
-/* Cloud-coloured backdrop behind the cloud tiles, painted on the map container
-   (the very back layer) and visible only where no opaque terrain covers it —
-   i.e. the void. It hides the thin subpixel seams between GridLayer tiles and
-   the un-tiled edge the drift transform briefly exposes; both would otherwise
-   show the black map background. Toggled with the Clouds overlay, so turning
-   clouds off restores the stock black void. */
-.leaflet-container.clouds-active {
-	background: #e6edfa;
-}
+/* The map container background is set to the solid cloud tone in index.html
+   (replacing the stock dark grey), so the unexplored void always reads as dense
+   cloud cover — whether the animated Clouds overlay is on or off. It is painted
+   on the very back layer, visible only where no opaque terrain covers it, so it
+   also hides the thin subpixel seams between GridLayer tiles behind the drifting
+   clouds. Keep this tone in sync with #e6edfa in index.html. */
 
 /* Soft, translucent cloud fringe laid over the discovered edge (see the
    #cloud-fringe SVG filter in clouds.js). Scoped to the terrain tile pane (the

@@ -60,6 +60,13 @@ rm -f "$VIEWER_DIR/clouds-wisp.png"
 sed -i '/href="clouds.css"/d' "$INDEX"
 sed -i '/href="regions.css"/a\    <link rel="stylesheet" href="clouds.css" />' "$INDEX"
 
+# Repaint the stock dark-grey void (body + .leaflet-container background) with
+# the solid cloud tone, so unexplored areas read as dense cloud cover even when
+# the animated Clouds overlay is off (e.g. on unaccelerated devices). Idempotent:
+# the freshly downloaded viewer always carries the #333 default. Keep this tone
+# in sync with the cloud palette in clouds.css / make-cloud-textures.py.
+sed -i 's/background: #333;/background: #e6edfa;/' "$INDEX"
+
 # Add the named regions to the stock layer control. Remove a prior injection so
 # rerunning this script does not duplicate the regions.
 sed -i '/\/\/ BEGIN 329 REGIONS/,/\/\/ END 329 REGIONS/d' "$SCRIPT"

@@ -14,6 +14,33 @@
 		const CLOUD_TILE = 512;        // must match the GridLayer tileSize below
 		const CLOUD_PERIOD = 4;        // texture repeats every CLOUD_PERIOD tiles
 
+		// Best-effort probe for hardware GPU acceleration. The cloud overlay
+		// leans on a continuous compositor transform, an SVG fringe filter, and
+		// pixelated upscaling; on a software renderer those make the map stutter,
+		// so the clouds start off there (the visitor can still enable them from
+		// the layer control). WebGL is unavailable or backed by a known software
+		// rasterizer (SwiftShader/llvmpipe/etc.) precisely when the compositor is
+		// also unaccelerated, which makes it a serviceable proxy. Any failure is
+		// treated as "not accelerated" so the heavier default never slips onto a
+		// struggling device.
+		function isGpuAccelerated() {
+			try {
+				const canvas = document.createElement('canvas');
+				const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+				if (!gl) return false;
+				const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+				if (dbg) {
+					const renderer = String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || '');
+					if (/swiftshader|llvmpipe|softpipe|software|microsoft basic render/i.test(renderer)) {
+						return false;
+					}
+				}
+				return true;
+			} catch (e) {
+				return false;
+			}
+		}
+
 		map.createPane('cloudPane');
 		const cloudPaneEl = map.getPane('cloudPane');
 		cloudPaneEl.style.zIndex = 190;                      // below terrain tiles (200)
@@ -62,7 +89,16 @@
 			maxZoom: map.getMaxZoom(),
 			updateWhenZooming: false,
 			keepBuffer: 2,
-		}).addTo(map);
+		});
+		// Default the clouds on only where the compositor is GPU-accelerated.
+		// Either way the void still reads as cloud cover, because the map
+		// background is the solid cloud tone (clouds.css / index.html), not
+		// black — so turning clouds off degrades to a static cloudscape rather
+		// than an empty black backdrop. The layer stays in the control below so
+		// the choice is always reversible.
+		if (isGpuAccelerated()) {
+			cloudLayer.addTo(map);
+		}
 		overlayMaps['Clouds'] = cloudLayer;
 
 		// Slow uniform drift driven by a GPU transform on the cloud pane (see

@@ -240,6 +240,40 @@
 			collisionUpdateFrame = requestAnimationFrame(updateRegionLabels);
 		};
 
+		const markerColorSubscribers = [];
+
+		const pointInRegion = function(x, z, coordinates) {
+			let inside = false;
+			for (let index = 0, previous = coordinates.length - 1; index < coordinates.length; previous = index++) {
+				const xi = coordinates[index].x, zi = coordinates[index].z;
+				const xj = coordinates[previous].x, zj = coordinates[previous].z;
+				if (((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) inside = !inside;
+			}
+			return inside;
+		};
+
+		const regionColorAt = function(x, z) {
+			for (const entry of regionEntries) {
+				const coordinates = entry.region.coordinates;
+				if (Array.isArray(coordinates) && pointInRegion(x, z, coordinates)) return entry.region.color;
+			}
+			return null;
+		};
+
+		const regionColorForPlayer = function(gamertag) {
+			if (typeof gamertag !== 'string' || !gamertag) return null;
+			for (const entry of regionEntries) {
+				const players = entry.region.players || [];
+				const match = players.some(function(playerEntry) {
+					const playerData = (typeof playerEntry === 'string') ? { xboxGamertag: playerEntry } : (playerEntry || {});
+					const playerName = playerData.xboxGamertag || playerData.discordUsername || '';
+					return playerName === gamertag;
+				});
+				if (match) return entry.region.color;
+			}
+			return null;
+		};
+
 		const loadRegions = function() {
 			if (!regionApiUrl) return;
 			fetch(regionApiUrl).then(function(response) {
@@ -256,6 +290,7 @@
 					entry.tooltip.addTo(regionInformationLayer);
 				});
 				scheduleRegionLabelUpdate();
+				markerColorSubscribers.forEach(function(subscriber) { subscriber(); });
 			}).catch(function(error) {
 				console.warn('Unable to load map regions.', error);
 			});

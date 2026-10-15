@@ -123,13 +123,14 @@
   display: block;
   width: 18px;
   height: 18px;
-  color: var(--map-ui-color);
+  color: var(--marker-color, #ffffff);
   filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.72));
   transition: transform 0.12s steps(2), filter 0.12s, color 0.12s;
 }
 
-/* Player homes: a solid amber house glyph in the same sign palette as the POI
-   pin, anchored at its base so it sits on the stored coordinate. */
+/* Player homes: a solid house glyph in the same sign palette as the POI pin,
+   anchored at its base so it sits on the stored coordinate. The fill is the
+   owner's region colour (set per marker via --marker-color), white otherwise. */
 .leaflet-container .home-marker-icon {
   width: 22px;
   height: 22px;
@@ -140,21 +141,21 @@
   display: block;
   width: 22px;
   height: 22px;
-  color: var(--map-ui-color);
+  color: var(--marker-color, #ffffff);
   filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.72));
   transition: transform 0.12s steps(2), filter 0.12s, color 0.12s;
 }
 
-/* Shared interactive hover: lift + amber glow. The transform sits on inner
-   elements so Leaflet's marker positioning and anchors stay untouched. SVG
-   markers also shift to the bright amber via currentColor. */
+/* Shared interactive hover: lift + a glow in the marker's own colour (region
+   colour, or white when outside/unaffiliated). The transform sits on inner
+   elements so Leaflet's marker positioning and anchors stay untouched. */
 .leaflet-container .home-marker-icon:hover .home-marker-svg,
 .leaflet-container .poi-marker-icon:hover .poi-marker-svg {
   transform: translateY(-3px);
-  color: #e79a20;
+  color: var(--marker-color, #ffffff);
   filter:
     drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.72))
-    drop-shadow(0 0 5px rgba(231, 154, 32, 0.85));
+    drop-shadow(0 0 5px var(--marker-color, #ffffff));
 }
 
 .region-player:hover .region-player-head,

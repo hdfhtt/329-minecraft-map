@@ -21,6 +21,24 @@
 		cloudPaneEl.style.setProperty('--drift-span', (CLOUD_PERIOD * CLOUD_TILE) + 'px');
 
 		const CloudGrid = L.GridLayer.extend({
+			// Leaflet loads only the tiles covering the viewport; keepBuffer
+			// merely RETAINS already-loaded tiles when panning, it never
+			// pre-loads beyond the view. The pane drifts left by one whole
+			// texture period via CSS transform (see below), so without tiles to
+			// the right the drift scrolls past the loaded edge and the void's
+			// end scrolls into view. Pad the loaded bounds on the drift side
+			// (east/+x) by the drift span + 1 tile, converting that on-screen
+			// distance to projected px through the current zoom scale so the
+			// right edge stays covered at every zoom. The period-exact loop
+			// (--drift-span) then makes the reset seamless: every resting zoom
+			// snaps to an integer level where the cloud tiles render at scale 1,
+			// so the on-screen period is always CLOUD_PERIOD*CLOUD_TILE.
+			_getTiledPixelBounds: function(center) {
+				const b = L.GridLayer.prototype._getTiledPixelBounds.call(this, center);
+				const scale = this._map.getZoomScale(this._map.getZoom(), this._tileZoom);
+				const pad = ((CLOUD_PERIOD + 1) * CLOUD_TILE) / scale;
+				return L.bounds(b.min, b.max.add([pad, 0]));
+			},
 			createTile: function(coords) {
 				const tile = L.DomUtil.create('div', this.options.tileClass);
 				// Static per-tile slice offset: tile at grid position (cx,cy)
@@ -43,7 +61,7 @@
 			minZoom: map.getMinZoom(),
 			maxZoom: map.getMaxZoom(),
 			updateWhenZooming: false,
-			keepBuffer: 6,
+			keepBuffer: 2,
 		}).addTo(map);
 		overlayMaps['Clouds'] = cloudLayer;
 
@@ -53,8 +71,9 @@
 		// stutter under image-rendering:pixelated — the compositor slides the
 		// layer sub-pixel with no repaint. The animation loops by exactly one
 		// texture period (CLOUD_PERIOD tiles = --drift-span), so the reset is
-		// seamless; the larger keepBuffer above keeps the drifted-in edge
-		// covered. Reduced motion disables the animation in CSS.
+		// seamless; the CloudGrid._getTiledPixelBounds override above pre-loads
+		// a period of tiles on the drift side so the edge never scrolls into
+		// view. Reduced motion disables the animation in CSS.
 		cloudPaneEl.classList.add('cloud-pane-drift');
 
 		// Drive a `clouds-active` class on the Leaflet container so the

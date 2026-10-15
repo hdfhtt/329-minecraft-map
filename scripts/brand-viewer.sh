@@ -122,8 +122,20 @@ else
   DAY_ATTRIBUTION=""
 fi
 
-if [[ -f "$INFO" ]]; then
+# The "last updated" label tracks the backup the render consumed, not this
+# deploy: prefer the backup's own timestamp ($BACKUP_TIMESTAMP, an ISO-8601
+# time passed by render-deploy.sh) so re-running against the same backup keeps
+# the same label, and fall back to the rendered data's mtime for manual or
+# local runs that have no backup timestamp.
+if [[ -n "${BACKUP_TIMESTAMP:-}" ]]; then
+  ATTRIBUTION="$(LC_ALL=C TZ=Asia/Kuala_Lumpur date -d "$BACKUP_TIMESTAMP" '+%B %-d, %Y, %-I:%M %p' 2>/dev/null || true)"
+elif [[ -f "$INFO" ]]; then
   ATTRIBUTION="$(LC_ALL=C TZ=Asia/Kuala_Lumpur date -r "$INFO" '+%B %-d, %Y, %-I:%M %p')"
+else
+  ATTRIBUTION=""
+fi
+
+if [[ -n "$ATTRIBUTION" ]]; then
   sed -i "s#\t\tconst refocus = function() {#\t\tmap.attributionControl.setPrefix(false);\n\t\tmap.attributionControl.addAttribution('${ATTRIBUTION}');\n\n\t\tconst refocus = function() {#" "$SCRIPT"
 else
   sed -i "s#\t\tconst refocus = function() {#\t\tmap.attributionControl.setPrefix(false);\n\n\t\tconst refocus = function() {#" "$SCRIPT"

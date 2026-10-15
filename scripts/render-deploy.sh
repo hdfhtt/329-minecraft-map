@@ -63,6 +63,21 @@ if [[ -z "$BLOB_NAME" || "$BLOB_NAME" == "None" ]]; then
 fi
 echo "Using backup blob: $BLOB_NAME"
 
+# Capture the backup's own creation time so the viewer's "last updated" label
+# tracks the world data, not when this render/deploy happened — re-running
+# against the same backup keeps the same label. Passed to brand-viewer.sh (via
+# deploy.sh) as $BACKUP_TIMESTAMP; best-effort, so a failed lookup just lets
+# brand-viewer fall back to the rendered data's mtime.
+BACKUP_TIMESTAMP="$(az storage blob show \
+  --account-name "$STORAGE_ACCOUNT" \
+  --container-name "$BACKUP_CONTAINER" \
+  --name "$BLOB_NAME" \
+  --auth-mode login \
+  --query "properties.lastModified" \
+  --output tsv 2>/dev/null || true)"
+export BACKUP_TIMESTAMP
+echo "Backup timestamp: ${BACKUP_TIMESTAMP:-<unknown>}"
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 ARCHIVE="$WORK/backup.tar.gz"

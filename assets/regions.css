@@ -160,7 +160,7 @@
 .region-player:hover .region-player-head,
 .region-player:focus-visible .region-player-head {
   transform: translateY(-3px);
-  filter: drop-shadow(0 0 5px rgba(231, 154, 32, 0.85));
+  filter: drop-shadow(0 0 5px var(--region-color));
 }
 
 /* Leaflet's stock controls use the same panel language as the region labels. */

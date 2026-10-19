@@ -14,8 +14,8 @@
 		};
 
 		// POI markers take the fill of the region they sit inside, falling back to
-		// white when outside every region. The colour is baked into the icon so it
-		// survives Leaflet rebuilding markers when the overlay is toggled.
+		// the theme accent when outside every region. The colour is baked into the
+		// icon so it survives Leaflet rebuilding markers when the overlay is toggled.
 		const poiIcon = function(color) {
 			const style = color ? ' style="--marker-color:' + color + '"' : '';
 			return L.divIcon({
@@ -29,10 +29,22 @@
 
 		const poiMarkers = [];
 
+		// The tooltip element is created lazily on hover, so store the resolved
+		// colour on the entry and stamp it onto the panel when it opens. This keeps
+		// the hover panel outline matching the region (theme accent when outside).
+		const applyPoiTooltipColor = function(entry) {
+			const element = entry.marker.getTooltip() && entry.marker.getTooltip().getElement();
+			if (!element) return;
+			if (entry.color) element.style.setProperty('--marker-color', entry.color);
+			else element.style.removeProperty('--marker-color');
+		};
+
 		const recolorPois = function() {
 			const colorAt = (typeof regionColorAt === 'function') ? regionColorAt : function() { return null; };
 			poiMarkers.forEach(function(entry) {
-				entry.marker.setIcon(poiIcon(poiSafeColor(colorAt(entry.x, entry.z))));
+				entry.color = poiSafeColor(colorAt(entry.x, entry.z));
+				entry.marker.setIcon(poiIcon(entry.color));
+				applyPoiTooltipColor(entry);
 			});
 		};
 
@@ -50,7 +62,9 @@
 					const marker = L.marker([-poi.z, poi.x], {
 						icon: poiIcon(null),
 					}).bindTooltip(escapeHtml(poi.name), { direction: 'top', offset: [0, -16], opacity: 1, className: 'marker-tooltip' }).addTo(poiLayer);
-					poiMarkers.push({ marker, x: poi.x, z: poi.z });
+					const entry = { marker, x: poi.x, z: poi.z, color: null };
+					marker.on('tooltipopen', function() { applyPoiTooltipColor(entry); });
+					poiMarkers.push(entry);
 				});
 				recolorPois();
 			}).catch(function(error) {

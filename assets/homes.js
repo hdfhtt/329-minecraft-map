@@ -14,9 +14,9 @@
 		};
 
 		// House markers take the fill of the region their owner belongs to (by
-		// gamertag membership), falling back to white when the player is not a
-		// member of any region. The colour is baked into the icon so it survives
-		// Leaflet rebuilding markers when the overlay is toggled.
+		// gamertag membership), falling back to the theme accent when the player is
+		// not a member of any region. The colour is baked into the icon so it
+		// survives Leaflet rebuilding markers when the overlay is toggled.
 		const homeIcon = function(color) {
 			const style = color ? ' style="--marker-color:' + color + '"' : '';
 			return L.divIcon({
@@ -30,10 +30,22 @@
 
 		const homeMarkers = [];
 
+		// The tooltip element is created lazily on hover, so store the resolved
+		// colour on the entry and stamp it onto the panel when it opens. This keeps
+		// the hover panel outline matching the region (theme accent when outside).
+		const applyHomeTooltipColor = function(entry) {
+			const element = entry.marker.getTooltip() && entry.marker.getTooltip().getElement();
+			if (!element) return;
+			if (entry.color) element.style.setProperty('--marker-color', entry.color);
+			else element.style.removeProperty('--marker-color');
+		};
+
 		const recolorHomes = function() {
 			const colorForPlayer = (typeof regionColorForPlayer === 'function') ? regionColorForPlayer : function() { return null; };
 			homeMarkers.forEach(function(entry) {
-				entry.marker.setIcon(homeIcon(homeSafeColor(colorForPlayer(entry.gamertag))));
+				entry.color = homeSafeColor(colorForPlayer(entry.gamertag));
+				entry.marker.setIcon(homeIcon(entry.color));
+				applyHomeTooltipColor(entry);
 			});
 		};
 
@@ -51,7 +63,9 @@
 					const marker = L.marker([-home.z, home.x], {
 						icon: homeIcon(null),
 					}).bindTooltip(`${escapeHomeHtml(home.gamertag)}&#39;s House`, { direction: 'top', offset: [0, -18], opacity: 1, className: 'marker-tooltip' }).addTo(homeLayer);
-					homeMarkers.push({ marker, gamertag: home.gamertag });
+					const entry = { marker, gamertag: home.gamertag, color: null };
+					marker.on('tooltipopen', function() { applyHomeTooltipColor(entry); });
+					homeMarkers.push(entry);
 				});
 				recolorHomes();
 			}).catch(function(error) {

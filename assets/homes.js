@@ -21,10 +21,10 @@
 			const style = color ? ' style="--marker-color:' + color + '"' : '';
 			return L.divIcon({
 				className: 'home-marker-icon',
-				html: '<svg class="home-marker-svg"' + style + ' viewBox="0 0 16 16" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5"/></svg>',
+				html: '<svg class="home-marker-svg"' + style + ' viewBox="0 -960 960 960" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>',
 				iconSize: [22, 22],
-				iconAnchor: [11, 21],
-				popupAnchor: [0, -20],
+				iconAnchor: [11, 19],
+				popupAnchor: [0, -19],
 			});
 		};
 

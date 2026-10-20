@@ -73,7 +73,7 @@
   display: block;
   width: 20px;
   height: 20px;
-  border: 1px solid rgba(255, 253, 242, 0.7);
+  border: 1px solid #ffffff;
   background: repeating-conic-gradient(#7f7f7f 0 25%, #555 0 50%) 50% / 8px 8px;
   image-rendering: pixelated;
   transition: transform 0.12s steps(2), filter 0.12s;
@@ -123,9 +123,11 @@
   display: block;
   width: 18px;
   height: 18px;
+  overflow: visible;
   color: var(--marker-color, var(--map-ui-color));
-  stroke: #fffdf2;
-  stroke-width: 0.9;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linejoin: round;
   paint-order: stroke;
   filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.72));
   transition: transform 0.12s steps(2), filter 0.12s, color 0.12s;
@@ -144,12 +146,22 @@
   display: block;
   width: 22px;
   height: 22px;
+  overflow: visible;
   color: var(--marker-color, var(--map-ui-color));
-  stroke: #fffdf2;
-  stroke-width: 0.9;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linejoin: round;
   paint-order: stroke;
   filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.72));
   transition: transform 0.12s steps(2), filter 0.12s, color 0.12s;
+}
+
+/* vector-effect is not an inherited property, so it must sit on the drawn
+   <path>, not the <svg>. This keeps stroke-width in device pixels (a crisp ~1px
+   rim after paint-order shows the outer half) regardless of the 960 viewBox. */
+.leaflet-container .poi-marker-svg path,
+.leaflet-container .home-marker-svg path {
+  vector-effect: non-scaling-stroke;
 }
 
 /* Shared interactive hover: lift + a glow in the marker's own colour (region
@@ -244,7 +256,7 @@
   width: 34px;
   height: 34px;
   background-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cg fill='none' stroke='%23fffdf2' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M17 7 27 12 17 17 7 12Z'/%3E%3Cpath d='M27 17 17 22 7 17'/%3E%3Cpath d='M27 22 17 27 7 22'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='%23fffdf2' d='M480-118 120-398l66-50 294 228 294-228 66 50-360 280Zm0-202L120-600l360-280 360 280-360 280Zm0-280Zm0 178 230-178-230-178-230 178 230 178Z'/%3E%3C/svg%3E");
   background-position: center;
   background-repeat: no-repeat;
   background-size: 26px 26px;
@@ -313,10 +325,10 @@
   width: 34px;
   height: 34px;
   background-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cg fill='none' stroke='%23fffdf2' stroke-linejoin='round' stroke-width='2'%3E%3Cellipse cx='17' cy='10' rx='10' ry='3.2'/%3E%3Cpath d='M7 10v14c0 1.77 4.48 3.2 10 3.2s10-1.43 10-3.2V10'/%3E%3Cpath d='M7 14.7c0 1.77 4.48 3.2 10 3.2s10-1.43 10-3.2'/%3E%3Cpath d='M7 19.3c0 1.77 4.48 3.2 10 3.2s10-1.43 10-3.2'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='%23fffdf2' d='M640-440 474-602q-31-30-52.5-66.5T400-748q0-55 38.5-93.5T532-880q32 0 60 13.5t48 36.5q20-23 48-36.5t60-13.5q55 0 93.5 38.5T880-748q0 43-21 79.5T807-602L640-440Zm0-112 109-107q19-19 35-40.5t16-48.5q0-22-15-37t-37-15q-14 0-26.5 5.5T700-778l-60 72-60-72q-9-11-21.5-16.5T532-800q-22 0-37 15t-15 37q0 27 16 48.5t35 40.5l109 107ZM280-220l278 76 238-74q-5-9-14.5-15.5T760-240H558q-27 0-43-2t-33-8l-93-31 22-78 81 27q17 5 40 8t68 4q0-11-6.5-21T578-354l-234-86h-64v220ZM40-80v-440h304q7 0 14 1.5t13 3.5l235 87q33 12 53.5 42t20.5 66h80q50 0 85 33t35 87v40L560-60l-280-78v58H40Zm80-80h80v-280h-80v280Zm520-546Z'/%3E%3C/svg%3E");
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 26px 26px;
+  background-size: 22px 22px;
 }
 
 .leaflet-container .donation-toggle:hover,
@@ -379,6 +391,9 @@
 
 .donation-overlay .donation-close {
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
   height: 24px;
   padding: 0;

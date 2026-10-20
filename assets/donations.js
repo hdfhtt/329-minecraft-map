@@ -110,7 +110,7 @@
 			closeButton.className = 'donation-close';
 			closeButton.type = 'button';
 			closeButton.setAttribute('aria-label', 'Close donations');
-			closeButton.textContent = '\u00d7';
+			closeButton.innerHTML = '<svg class="donation-close-icon" viewBox="0 -960 960 960" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>';
 
 			header.append(title, closeButton);
 

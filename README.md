@@ -42,9 +42,9 @@ Variables used below:
 ```sh
 RG=minecraft-with-329
 STORAGE=minecraftwith3298eeb
-LOC=eastasia
+LOC=southeastasia
 JOB=map-render-deploy
-ENVNAME=map-render-env
+ENVNAME=map-render-env-sea
 IMAGE=<dockerhub-user>/329-map-render:latest   # a public Docker Hub repo
 ```
 
@@ -138,6 +138,11 @@ through the Container Apps Job's `POI_API_URL`, `REGION_API_URL`,
 simply leaves the matching overlay empty. The `Homes` overlay shows each
 registered player's house (set with the Discord `/home x z` command) as an
 amber house marker labelled with the player's gamertag and Minecraft head.
+The `Points of Interest` overlay shows each POI (added with `/mark add`) with a
+marker glyph for its type; hovering opens a panel with the name, the coordinate,
+and the creator's gamertag and Minecraft head. Marker glyphs are keyed by the
+icon slug the API sends, and an unrecognized slug falls back to the default pin
+so a newly added type cannot break the map before the next render.
 The API URLs are public and read-only; Discord command authorization remains in
 the Azure Function.
 

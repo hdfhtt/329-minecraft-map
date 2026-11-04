@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "route": "/data/info.json",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "route": "/data/*",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    }
+  ]
+}

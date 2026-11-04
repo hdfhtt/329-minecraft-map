@@ -1,35 +1,35 @@
-		// BEGIN 329 REGIONS
-		const regionApiUrl = '__REGION_API_URL__';
-		const regionLayer = L.layerGroup().addTo(map);
-		const regionInformationLayer = L.layerGroup().addTo(map);
-		let regionInformationPreferred = true;
-		let syncingRegionInformation = false;
-		overlayMaps['Regions'] = regionLayer;
-		overlayMaps['Information'] = regionInformationLayer;
+		// BEGIN 329 GUILDS
+		const guildApiUrl = '__GUILD_API_URL__';
+		const guildLayer = L.layerGroup().addTo(map);
+		const guildInformationLayer = L.layerGroup().addTo(map);
+		let guildInformationPreferred = true;
+		let syncingGuildInformation = false;
+		overlayMaps['Guilds'] = guildLayer;
+		overlayMaps['Information'] = guildInformationLayer;
 
 		const defaultAvatar = 'https://mc-heads.net/avatar/MHF_Steve/32.png';
 
-		let regionEntries = [];
+		let guildEntries = [];
 
-		const createRegionLabel = function(region) {
+		const createGuildLabel = function(guild) {
 			const label = document.createElement('div');
 			label.className = 'region-label-content';
 			label.addEventListener('click', function(event) {
 				event.preventDefault();
 				event.stopPropagation();
-				map.fitBounds(region.bounds);
+				map.fitBounds(guild.bounds);
 			});
 
 			const name = document.createElement('div');
 			name.className = 'region-label-name';
-			name.textContent = region.name;
+			name.textContent = guild.name;
 			label.append(name);
 
-			if (!region.players) return label;
+			if (!guild.players) return label;
 
 			const players = document.createElement('div');
 			players.className = 'region-players';
-			region.players.forEach(function(playerEntry) {
+			guild.players.forEach(function(playerEntry) {
 				const playerData = (typeof playerEntry === 'string') ? { xboxGamertag: playerEntry } : (playerEntry || {});
 				const playerName = playerData.xboxGamertag || playerData.discordUsername || '';
 				if (!playerName) return;
@@ -73,28 +73,28 @@
 			return label;
 		};
 
-		const setRegionColor = function(element, region) {
-			if (element) element.style.setProperty('--region-color', region.color);
+		const setGuildColor = function(element, guild) {
+			if (element) element.style.setProperty('--region-color', guild.color);
 		};
 
-		const createRegionEntry = function(region) {
-			if (!Array.isArray(region.coordinates) || region.coordinates.length < 3 || typeof region.name !== 'string' || typeof region.color !== 'string') return undefined;
-			const latLngs = region.coordinates.map(function(coordinate) {
+		const createGuildEntry = function(guild) {
+			if (!Array.isArray(guild.coordinates) || guild.coordinates.length < 3 || typeof guild.name !== 'string' || typeof guild.color !== 'string') return undefined;
+			const latLngs = guild.coordinates.map(function(coordinate) {
 				if (!Number.isInteger(coordinate.x) || !Number.isInteger(coordinate.z)) return undefined;
 				return [-coordinate.z, coordinate.x];
 			});
 			if (latLngs.some(function(latLng) { return !latLng; })) return undefined;
 
 			const polygon = L.polygon(latLngs, {
-				color: region.color,
-				fillColor: region.color,
+				color: guild.color,
+				fillColor: guild.color,
 				fillOpacity: 0.18,
 				weight: 3,
 			});
-			const entryRegion = {
-				...region,
+			const entryGuild = {
+				...guild,
 				bounds: polygon.getBounds(),
-				players: Array.isArray(region.players) ? region.players : [],
+				players: Array.isArray(guild.players) ? guild.players : [],
 			};
 			const tooltip = L.tooltip({
 				className: 'region-label',
@@ -102,8 +102,8 @@
 				opacity: 1,
 				permanent: true,
 				interactive: true,
-			}).setContent(createRegionLabel(entryRegion)).setLatLng(polygon.getBounds().getCenter());
-			return { region: entryRegion, polygon, tooltip };
+			}).setContent(createGuildLabel(entryGuild)).setLatLng(polygon.getBounds().getCenter());
+			return { guild: entryGuild, polygon, tooltip };
 		};
 
 		const mergedTooltips = [];
@@ -111,7 +111,7 @@
 
 		const clearMergedTooltips = function() {
 			mergedTooltips.splice(0).forEach(function(tooltip) {
-				regionInformationLayer.removeLayer(tooltip);
+				guildInformationLayer.removeLayer(tooltip);
 			});
 		};
 
@@ -130,16 +130,16 @@
 			});
 		};
 
-		const syncRegionInformationControl = function() {
+		const syncGuildInformationControl = function() {
 			decorateLayerControl();
 			const input = getLayerControlInput('Information');
-			const regionsVisible = map.hasLayer(regionLayer);
+			const guildsVisible = map.hasLayer(guildLayer);
 
-			if (!regionsVisible) {
-				if (map.hasLayer(regionInformationLayer)) regionInformationPreferred = true;
-				syncingRegionInformation = true;
-				map.removeLayer(regionInformationLayer);
-				syncingRegionInformation = false;
+			if (!guildsVisible) {
+				if (map.hasLayer(guildInformationLayer)) guildInformationPreferred = true;
+				syncingGuildInformation = true;
+				map.removeLayer(guildInformationLayer);
+				syncingGuildInformation = false;
 				if (input) {
 					input.checked = false;
 					input.disabled = true;
@@ -154,10 +154,10 @@
 				input.closest('label').classList.remove('region-information-layer-disabled');
 			}
 
-			if (regionInformationPreferred && !map.hasLayer(regionInformationLayer)) {
-				syncingRegionInformation = true;
-				regionInformationLayer.addTo(map);
-				syncingRegionInformation = false;
+			if (guildInformationPreferred && !map.hasLayer(guildInformationLayer)) {
+				syncingGuildInformation = true;
+				guildInformationLayer.addTo(map);
+				syncingGuildInformation = false;
 			}
 		};
 
@@ -166,29 +166,29 @@
 				first.top < second.bottom && first.bottom > second.top;
 		};
 
-		const createMergedRegionLabel = function(entries) {
+		const createMergedGuildLabel = function(entries) {
 			const label = document.createElement('div');
 			label.className = 'region-label-group';
 			entries.forEach(function(entry) {
 				const section = document.createElement('div');
 				section.className = 'region-label-section';
-				setRegionColor(section, entry.region);
-				section.append(createRegionLabel(entry.region));
+				setGuildColor(section, entry.guild);
+				section.append(createGuildLabel(entry.guild));
 				label.append(section);
 			});
 			return label;
 		};
 
-		const updateRegionLabels = function() {
+		const updateGuildLabels = function() {
 			collisionUpdateFrame = undefined;
 			clearMergedTooltips();
-			if (!map.hasLayer(regionLayer) || !map.hasLayer(regionInformationLayer)) return;
+			if (!map.hasLayer(guildLayer) || !map.hasLayer(guildInformationLayer)) return;
 
-			const visibleEntries = regionEntries.filter(function(entry) {
+			const visibleEntries = guildEntries.filter(function(entry) {
 				const element = entry.tooltip.getElement();
 				if (!element) return false;
 				element.classList.remove('region-label-hidden');
-				setRegionColor(element, entry.region);
+				setGuildColor(element, entry.guild);
 				return map.hasLayer(entry.polygon);
 			});
 
@@ -230,19 +230,19 @@
 					opacity: 1,
 					permanent: true,
 					interactive: true,
-				}).setContent(createMergedRegionLabel(group)).setLatLng(map.containerPointToLatLng(center)).addTo(regionInformationLayer);
+				}).setContent(createMergedGuildLabel(group)).setLatLng(map.containerPointToLatLng(center)).addTo(guildInformationLayer);
 				mergedTooltips.push(tooltip);
 			});
 		};
 
-		const scheduleRegionLabelUpdate = function() {
+		const scheduleGuildLabelUpdate = function() {
 			if (collisionUpdateFrame) cancelAnimationFrame(collisionUpdateFrame);
-			collisionUpdateFrame = requestAnimationFrame(updateRegionLabels);
+			collisionUpdateFrame = requestAnimationFrame(updateGuildLabels);
 		};
 
 		const markerColorSubscribers = [];
 
-		const pointInRegion = function(x, z, coordinates) {
+		const pointInGuild = function(x, z, coordinates) {
 			let inside = false;
 			for (let index = 0, previous = coordinates.length - 1; index < coordinates.length; previous = index++) {
 				const xi = coordinates[index].x, zi = coordinates[index].z;
@@ -252,62 +252,62 @@
 			return inside;
 		};
 
-		const regionColorAt = function(x, z) {
-			for (const entry of regionEntries) {
-				const coordinates = entry.region.coordinates;
-				if (Array.isArray(coordinates) && pointInRegion(x, z, coordinates)) return entry.region.color;
+		const guildColorAt = function(x, z) {
+			for (const entry of guildEntries) {
+				const coordinates = entry.guild.coordinates;
+				if (Array.isArray(coordinates) && pointInGuild(x, z, coordinates)) return entry.guild.color;
 			}
 			return null;
 		};
 
-		const regionColorForPlayer = function(gamertag) {
+		const guildColorForPlayer = function(gamertag) {
 			if (typeof gamertag !== 'string' || !gamertag) return null;
-			for (const entry of regionEntries) {
-				const players = entry.region.players || [];
+			for (const entry of guildEntries) {
+				const players = entry.guild.players || [];
 				const match = players.some(function(playerEntry) {
 					const playerData = (typeof playerEntry === 'string') ? { xboxGamertag: playerEntry } : (playerEntry || {});
 					const playerName = playerData.xboxGamertag || playerData.discordUsername || '';
 					return playerName === gamertag;
 				});
-				if (match) return entry.region.color;
+				if (match) return entry.guild.color;
 			}
 			return null;
 		};
 
-		const loadRegions = function() {
-			if (!regionApiUrl) return;
-			if (typeof mapLoading !== 'undefined') mapLoading.begin('Regions');
-			fetch(regionApiUrl).then(function(response) {
-				if (!response.ok) throw new Error(`Region API returned ${response.status}`);
+		const loadGuilds = function() {
+			if (!guildApiUrl) return;
+			if (typeof mapLoading !== 'undefined') mapLoading.begin('Guilds');
+			fetch(guildApiUrl).then(function(response) {
+				if (!response.ok) throw new Error(`Guild API returned ${response.status}`);
 				return response.json();
-			}).then(function(regions) {
-				if (!Array.isArray(regions)) throw new Error('Region API returned invalid data');
+			}).then(function(guilds) {
+				if (!Array.isArray(guilds)) throw new Error('Guild API returned invalid data');
 				clearMergedTooltips();
-				regionLayer.clearLayers();
-				regionInformationLayer.clearLayers();
-				regionEntries = regions.map(createRegionEntry).filter(Boolean);
-				regionEntries.forEach(function(entry) {
-					entry.polygon.addTo(regionLayer);
-					entry.tooltip.addTo(regionInformationLayer);
+				guildLayer.clearLayers();
+				guildInformationLayer.clearLayers();
+				guildEntries = guilds.map(createGuildEntry).filter(Boolean);
+				guildEntries.forEach(function(entry) {
+					entry.polygon.addTo(guildLayer);
+					entry.tooltip.addTo(guildInformationLayer);
 				});
-				scheduleRegionLabelUpdate();
+				scheduleGuildLabelUpdate();
 				markerColorSubscribers.forEach(function(subscriber) { subscriber(); });
 			}).catch(function(error) {
-				console.warn('Unable to load map regions.', error);
+				console.warn('Unable to load map guilds.', error);
 			}).finally(function() {
-				if (typeof mapLoading !== 'undefined') mapLoading.end('Regions');
+				if (typeof mapLoading !== 'undefined') mapLoading.end('Guilds');
 			});
 		};
 
-		loadRegions();
-		setInterval(loadRegions, 60000);
-		setTimeout(syncRegionInformationControl, 0);
-		map.whenReady(scheduleRegionLabelUpdate);
-		map.on('zoomend moveend resize overlayadd overlayremove', scheduleRegionLabelUpdate);
+		loadGuilds();
+		setInterval(loadGuilds, 60000);
+		setTimeout(syncGuildInformationControl, 0);
+		map.whenReady(scheduleGuildLabelUpdate);
+		map.on('zoomend moveend resize overlayadd overlayremove', scheduleGuildLabelUpdate);
 		map.on('overlayadd overlayremove', function(event) {
-			if (event.layer === regionInformationLayer && !syncingRegionInformation) {
-				regionInformationPreferred = map.hasLayer(regionInformationLayer);
+			if (event.layer === guildInformationLayer && !syncingGuildInformation) {
+				guildInformationPreferred = map.hasLayer(guildInformationLayer);
 			}
-			syncRegionInformationControl();
+			syncGuildInformationControl();
 		});
-		// END 329 REGIONS
+		// END 329 GUILDS

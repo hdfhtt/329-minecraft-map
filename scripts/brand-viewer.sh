@@ -4,9 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VIEWER_DIR="${1:-$ROOT_DIR/output/viewer}"
 ASSET="$ROOT_DIR/assets/favicon.ico"
-REGIONS="$ROOT_DIR/assets/regions.js"
+GUILDS="$ROOT_DIR/assets/guilds.js"
 COORDINATES="$ROOT_DIR/assets/coordinates.js"
-REGION_STYLE="$ROOT_DIR/assets/regions.css"
+THEME_STYLE="$ROOT_DIR/assets/regions.css"
 POIS="$ROOT_DIR/assets/pois.js"
 HOMES="$ROOT_DIR/assets/homes.js"
 DONATIONS="$ROOT_DIR/assets/donations.js"
@@ -27,9 +27,9 @@ TITLE="Minecraft with 329"
 [[ -f "$INDEX" ]] || { echo "Viewer index not found: $INDEX" >&2; exit 1; }
 [[ -f "$SCRIPT" ]] || { echo "Viewer script not found: $SCRIPT" >&2; exit 1; }
 [[ -f "$ASSET" ]] || { echo "Favicon asset not found: $ASSET" >&2; exit 1; }
-[[ -f "$REGIONS" ]] || { echo "Region definitions not found: $REGIONS" >&2; exit 1; }
+[[ -f "$GUILDS" ]] || { echo "Guild definitions not found: $GUILDS" >&2; exit 1; }
 [[ -f "$COORDINATES" ]] || { echo "Coordinate initialization not found: $COORDINATES" >&2; exit 1; }
-[[ -f "$REGION_STYLE" ]] || { echo "Region stylesheet not found: $REGION_STYLE" >&2; exit 1; }
+[[ -f "$THEME_STYLE" ]] || { echo "Theme stylesheet not found: $THEME_STYLE" >&2; exit 1; }
 [[ -f "$POIS" ]] || { echo "POI definitions not found: $POIS" >&2; exit 1; }
 [[ -f "$HOMES" ]] || { echo "Home definitions not found: $HOMES" >&2; exit 1; }
 [[ -f "$DONATIONS" ]] || { echo "Donation panel definitions not found: $DONATIONS" >&2; exit 1; }
@@ -55,7 +55,7 @@ sed -i "s#<title>${TITLE}</title>#<title>${TITLE}</title>\n    <link rel=\"icon\
 
 # Install region label styles after Leaflet's stylesheet so custom tooltip rules
 # take precedence. Replace the link on each run to keep the operation idempotent.
-cp -f "$REGION_STYLE" "$VIEWER_DIR/regions.css"
+cp -f "$THEME_STYLE" "$VIEWER_DIR/regions.css"
 rm -f "$VIEWER_DIR/anonymous-player.svg"
 sed -i '/href="regions.css"/d' "$INDEX"
 sed -i '/leaflet-1\.9\.4\/leaflet\.css/a\    <link rel="stylesheet" href="regions.css" />' "$INDEX"
@@ -111,11 +111,14 @@ cp -f "$SWA_CONFIG" "$VIEWER_DIR/staticwebapp.config.json"
 # in sync with the cloud palette in clouds.css / make-cloud-textures.py.
 sed -i 's/background: #333;/background: #e6edfa;/' "$INDEX"
 
-# Add the named regions to the stock layer control. Remove a prior injection so
-# rerunning this script does not duplicate the regions.
+# Add the named guild claims to the stock layer control. Remove a prior
+# injection so rerunning this script does not duplicate them; the REGIONS
+# markers are the pre-rename name of this same block and are cleared too, so a
+# viewer branded by an older revision upgrades cleanly instead of carrying both.
+sed -i '/\/\/ BEGIN 329 GUILDS/,/\/\/ END 329 GUILDS/d' "$SCRIPT"
 sed -i '/\/\/ BEGIN 329 REGIONS/,/\/\/ END 329 REGIONS/d' "$SCRIPT"
-sed -i "/const overlayMaps = {};/r $REGIONS" "$SCRIPT"
-sed -i "s|__REGION_API_URL__|${REGION_API_URL:-}|g" "$SCRIPT"
+sed -i "/const overlayMaps = {};/r $GUILDS" "$SCRIPT"
+sed -i "s|__GUILD_API_URL__|${GUILD_API_URL:-}|g" "$SCRIPT"
 
 # The POI endpoint is supplied at deployment time so an environment-specific URL
 # never needs to be committed to the viewer assets.
@@ -124,7 +127,7 @@ sed -i '/\/\/ BEGIN 329 POIS/,/\/\/ END 329 POIS/d' "$SCRIPT"
 # refresh timer follows the block and is removed separately.
 sed -i '/^[[:space:]]*const poiApiUrl = /,/^[[:space:]]*loadPois();/d' "$SCRIPT"
 sed -i '/^[[:space:]]*setInterval(loadPois, 60000);/d' "$SCRIPT"
-sed -i "/\/\/ END 329 REGIONS/r $POIS" "$SCRIPT"
+sed -i "/\/\/ END 329 GUILDS/r $POIS" "$SCRIPT"
 sed -i "s|__POI_API_URL__|${POI_API_URL:-}|g" "$SCRIPT"
 
 # Add the donation panel as an optional themed map control. Like other public API

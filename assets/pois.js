@@ -5,7 +5,7 @@
 
 		// One glyph per POI type, keyed by the slug the API sends (see the API's
 		// src/enums.js PoiIcon and the labels in its discord-commands.toml). The
-		// type is carried by the silhouette alone: the fill stays the region
+		// type is carried by the silhouette alone: the fill stays the guild
 		// colour, so a marker still says which claim it sits in. Material Symbols
 		// paths, same 960 viewBox as the home marker.
 		const poiDefaultIcon = 'pin';
@@ -44,8 +44,8 @@
 			return (typeof color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(color)) ? color : null;
 		};
 
-		// POI markers take the fill of the region they sit inside, falling back to
-		// the theme accent when outside every region. The colour is baked into the
+		// POI markers take the fill of the guild claim they sit inside, falling back to
+		// the theme accent when outside every claim. The colour is baked into the
 		// icon so it survives Leaflet rebuilding markers when the overlay is toggled.
 		// Sized to match the home marker: the filled type glyphs carry more detail
 		// than a plain pin, and at 18px the white rim swallowed most of them.
@@ -119,7 +119,7 @@
 
 		// The tooltip element is created lazily on hover, so store the resolved
 		// colour on the entry and stamp it onto the panel when it opens. This keeps
-		// the hover panel outline matching the region (theme accent when outside).
+		// the hover panel outline matching the guild (theme accent when outside).
 		const applyPoiTooltipColor = function(entry) {
 			const element = entry.marker.getTooltip() && entry.marker.getTooltip().getElement();
 			if (!element) return;
@@ -128,7 +128,7 @@
 		};
 
 		const recolorPois = function() {
-			const colorAt = (typeof regionColorAt === 'function') ? regionColorAt : function() { return null; };
+			const colorAt = (typeof guildColorAt === 'function') ? guildColorAt : function() { return null; };
 			poiMarkers.forEach(function(entry) {
 				entry.color = poiSafeColor(colorAt(entry.x, entry.z));
 				entry.marker.setIcon(poiIcon(entry.icon, entry.color));

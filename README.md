@@ -72,7 +72,7 @@ az containerapp job create -g "$RG" -n "$JOB" --environment "$ENVNAME" \
   --env-vars \
     SWA_CLI_DEPLOYMENT_TOKEN=secretref:swa-token \
     POI_API_URL=https://<your-function-app>.azurewebsites.net/api/pois \
-    REGION_API_URL=https://<your-function-app>.azurewebsites.net/api/regions \
+    GUILD_API_URL=https://<your-function-app>.azurewebsites.net/api/guilds \
     DONATION_API_URL=https://<your-function-app>.azurewebsites.net/api/donations \
     HOME_API_URL=https://<your-function-app>.azurewebsites.net/api/homes
 ```
@@ -102,28 +102,30 @@ override them on the job if the backup location moves.
 The stock MinedMap viewer ships with the title `MinedMap`, no favicon, and
 Leaflet and renderer credits. This project rebrands it to **Minecraft with 329**
 with a custom favicon and replaces the credits with the map render timestamp.
-It also adds a default-visible `Regions` overlay with named boundaries loaded
+It also adds a default-visible `Guilds` overlay with named claim boundaries loaded
 from the companion Discord bot API that can be hidden from the Leaflet layer
 control.
 
-The icon source lives at `assets/favicon.ico`, the Leaflet region definitions
-live at `assets/regions.js`, the initial coordinate display lives at
+The icon source lives at `assets/favicon.ico`, the Leaflet guild definitions
+live at `assets/guilds.js`, the initial coordinate display lives at
 `assets/coordinates.js`, the donation panel lives at `assets/donations.js`, the
 loading splash lives at `assets/loading.{html,css,js}`, and the label/control
-styles live at `assets/regions.css`.
-All are committed to Git. Each region has a distinct tinted fill and a permanent
+styles live at `assets/regions.css` — that one keeps its name because it styles
+the whole viewer theme (Leaflet controls, POI and home markers, the donation
+panel), not just guild labels.
+All are committed to Git. Each guild has a distinct tinted fill and a permanent
 pixel-style label.
 
 `scripts/brand-viewer.sh` applies the branding after each render (it is the final
 step of `scripts/deploy.sh`). The script sets the page title, copies
-`assets/favicon.ico` to `output/viewer/favicon.ico`, injects the regions, removes
+`assets/favicon.ico` to `output/viewer/favicon.ico`, injects the guilds, removes
 the stock Leaflet and MinedMap credits, and shows the complete Minecraft day from
 `329/level.dat` in its own map panel alongside the modification timestamp of
 `data/info.json` in Malaysia time. It is idempotent and safe to run repeatedly.
-Edit `assets/regions.js` to change how live regions are rendered, and edit
-`assets/regions.css` to change the labels. Manage region names, coordinates,
-colors, and members with the Discord `/region` command. Player avatars are
-supplied by the region API, derived from each registered player's Xbox XUID;
+Edit `assets/guilds.js` to change how live guilds are rendered, and edit
+`assets/regions.css` to change the labels. Manage guild names, coordinates,
+colors, and members with the Discord `/guild` command. Player avatars are
+supplied by the guild API, derived from each registered player's Xbox XUID;
 players without a resolved avatar use the standard Steve head. Edit
 `assets/favicon.ico` or the `TITLE` value in `scripts/brand-viewer.sh` to change
 the branding. Browsers cache favicons aggressively; after publishing, use a hard
@@ -145,7 +147,7 @@ feedback cover the wait, both applied by `scripts/brand-viewer.sh`:
   ever trapping the map behind it: it gives up after eight seconds without a
   single tile event, and an inline timeout in `index.html` clears it after
   twenty seconds even if the viewer script never runs.
-- A small **status pill** at the bottom left for the `Regions`,
+- A small **status pill** at the bottom left for the `Guilds`,
   `Points of Interest`, and `Homes` overlays, which arrive later from the API
   where an Azure Function cold start can add seconds. These never block the
   splash: the map is pannable while they load, and only each overlay's first
@@ -166,10 +168,10 @@ is always picked up.
 
 ### Discord POIs
 
-The map shows live `Points of Interest`, `Regions`, `Donations`, and `Homes`
+The map shows live `Points of Interest`, `Guilds`, `Donations`, and `Homes`
 overlays supplied by the companion `329-minecraft-api` Azure Function. The
 endpoints are intentionally not committed; they are supplied to the render
-through the Container Apps Job's `POI_API_URL`, `REGION_API_URL`,
+through the Container Apps Job's `POI_API_URL`, `GUILD_API_URL`,
 `DONATION_API_URL`, and `HOME_API_URL` environment variables. An empty value
 simply leaves the matching overlay empty. The `Homes` overlay shows each
 registered player's house (set with the Discord `/home x z` command) as an

@@ -21,7 +21,8 @@ set -euo pipefail
 #                            /opt/minedmap, else downloaded from the nightly release)
 #   VIEWER_SRC               path to a prebuilt viewer dir (default: /opt/viewer,
 #                            else downloaded)
-#   POI_API_URL / REGION_API_URL / DONATION_API_URL  overlay endpoints (deploy.sh)
+#   POI_API_URL / GUILD_API_URL / DONATION_API_URL / HOME_API_URL
+#                            overlay endpoints (passed through to deploy.sh)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STORAGE_ACCOUNT="${STORAGE_ACCOUNT:?Set STORAGE_ACCOUNT}"

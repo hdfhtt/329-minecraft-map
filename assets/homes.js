@@ -13,9 +13,9 @@
 			return (typeof color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(color)) ? color : null;
 		};
 
-		// House markers take the fill of the region their owner belongs to (by
+		// House markers take the fill of the guild their owner belongs to (by
 		// gamertag membership), falling back to the theme accent when the player is
-		// not a member of any region. The colour is baked into the icon so it
+		// not a member of any guild. The colour is baked into the icon so it
 		// survives Leaflet rebuilding markers when the overlay is toggled.
 		const homeIcon = function(color) {
 			const style = color ? ' style="--marker-color:' + color + '"' : '';
@@ -32,7 +32,7 @@
 
 		// The tooltip element is created lazily on hover, so store the resolved
 		// colour on the entry and stamp it onto the panel when it opens. This keeps
-		// the hover panel outline matching the region (theme accent when outside).
+		// the hover panel outline matching the guild (theme accent when outside).
 		const applyHomeTooltipColor = function(entry) {
 			const element = entry.marker.getTooltip() && entry.marker.getTooltip().getElement();
 			if (!element) return;
@@ -41,7 +41,7 @@
 		};
 
 		const recolorHomes = function() {
-			const colorForPlayer = (typeof regionColorForPlayer === 'function') ? regionColorForPlayer : function() { return null; };
+			const colorForPlayer = (typeof guildColorForPlayer === 'function') ? guildColorForPlayer : function() { return null; };
 			homeMarkers.forEach(function(entry) {
 				entry.color = homeSafeColor(colorForPlayer(entry.gamertag));
 				entry.marker.setIcon(homeIcon(entry.color));

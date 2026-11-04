@@ -108,8 +108,9 @@ control.
 
 The icon source lives at `assets/favicon.ico`, the Leaflet region definitions
 live at `assets/regions.js`, the initial coordinate display lives at
-`assets/coordinates.js`, the donation panel lives at `assets/donations.js`, and
-the label/control styles live at `assets/regions.css`.
+`assets/coordinates.js`, the donation panel lives at `assets/donations.js`, the
+loading splash lives at `assets/loading.{html,css,js}`, and the label/control
+styles live at `assets/regions.css`.
 All are committed to Git. Each region has a distinct tinted fill and a permanent
 pixel-style label.
 
@@ -127,6 +128,41 @@ players without a resolved avatar use the standard Steve head. Edit
 `assets/favicon.ico` or the `TITLE` value in `scripts/brand-viewer.sh` to change
 the branding. Browsers cache favicons aggressively; after publishing, use a hard
 refresh or a private window to see a changed icon.
+
+### Loading Feedback
+
+A first visit has to download Leaflet and the viewer script, round-trip
+`data/info.json`, and only then pull a screenful of terrain tiles — and the
+stock viewer paints nothing at all until that finishes. Two separate pieces of
+feedback cover the wait, both applied by `scripts/brand-viewer.sh`:
+
+- A **loading splash** over the whole page, styled as a drifting cloudscape with
+  a pixel progress bar that counts the terrain tiles as they arrive. Its markup
+  is injected directly into `index.html` (and `loading.css` is linked from the
+  head) so it is on screen in the first frame rather than waiting for
+  JavaScript; the controller in `assets/loading.js` dismisses it when the
+  terrain layer reports every visible tile settled. Two failsafes keep it from
+  ever trapping the map behind it: it gives up after eight seconds without a
+  single tile event, and an inline timeout in `index.html` clears it after
+  twenty seconds even if the viewer script never runs.
+- A small **status pill** at the bottom left for the `Regions`,
+  `Points of Interest`, and `Homes` overlays, which arrive later from the API
+  where an Azure Function cold start can add seconds. These never block the
+  splash: the map is pannable while they load, and only each overlay's first
+  load is announced, so the 60-second refreshes stay silent. The donation panel
+  loads on demand and reports inside its own panel instead.
+
+The branding also shortens the wait itself. Both scripts are marked `defer` (the
+stock inline `createMap()` call moves into `DOMContentLoaded` to match), so the
+document and the splash paint without waiting on roughly 200 KB of blocking
+JavaScript, and `data/info.json` is preloaded from the head so its request
+starts in parallel rather than after the viewer script executes — which is why
+its fetch is switched from `no-store` to `no-cache`, since a `no-store` request
+cannot reuse a preloaded response. `assets/staticwebapp.config.json` is
+published alongside the viewer so a returning visitor reuses rendered tiles for
+an hour instead of downloading them again; that window sits well inside the
+roughly daily render cadence, and `info.json` stays uncached so a fresh render
+is always picked up.
 
 ### Discord POIs
 

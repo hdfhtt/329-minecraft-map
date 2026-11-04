@@ -51,6 +51,7 @@
 
 		const loadHomes = function() {
 			if (!homeApiUrl) return;
+			if (typeof mapLoading !== 'undefined') mapLoading.begin('Homes');
 			fetch(homeApiUrl).then(function(response) {
 				if (!response.ok) throw new Error(`Home API returned ${response.status}`);
 				return response.json();
@@ -70,6 +71,8 @@
 				recolorHomes();
 			}).catch(function(error) {
 				console.warn('Unable to load homes.', error);
+			}).finally(function() {
+				if (typeof mapLoading !== 'undefined') mapLoading.end('Homes');
 			});
 		};
 

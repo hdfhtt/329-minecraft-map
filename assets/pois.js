@@ -138,6 +138,7 @@
 
 		const loadPois = function() {
 			if (!poiApiUrl) return;
+			if (typeof mapLoading !== 'undefined') mapLoading.begin('Points of interest');
 			fetch(poiApiUrl).then(function(response) {
 				if (!response.ok) throw new Error(`POI API returned ${response.status}`);
 				return response.json();
@@ -157,6 +158,8 @@
 				recolorPois();
 			}).catch(function(error) {
 				console.warn('Unable to load map POIs.', error);
+			}).finally(function() {
+				if (typeof mapLoading !== 'undefined') mapLoading.end('Points of interest');
 			});
 		};
 

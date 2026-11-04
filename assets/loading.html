@@ -1,0 +1,21 @@
+    <!-- BEGIN 329 LOADING -->
+    <div id="map-loading" class="map-loading-indeterminate" role="status" aria-live="polite">
+      <div class="map-loading-sky" aria-hidden="true"></div>
+      <div class="map-loading-panel">
+        <div class="map-loading-label">Loading world&hellip;</div>
+        <div class="map-loading-track"><div class="map-loading-fill"></div></div>
+        <div class="map-loading-count"></div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      // Last-resort failsafe, independent of MinedMap.js: if createMap() never
+      // runs at all (a script error, a failed data/info.json), the splash still
+      // has to get out of the way rather than hide a broken map behind a
+      // progress bar that will never move. The normal dismissal happens much
+      // earlier, from the loading block inside MinedMap.js.
+      setTimeout(function () {
+        var splash = document.getElementById('map-loading');
+        if (splash) splash.classList.add('map-loading-done');
+      }, 20000);
+    </script>
+    <!-- END 329 LOADING -->

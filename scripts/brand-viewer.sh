@@ -13,6 +13,10 @@ DONATIONS="$ROOT_DIR/assets/donations.js"
 CLOUDS="$ROOT_DIR/assets/clouds.js"
 CLOUD_STYLE="$ROOT_DIR/assets/clouds.css"
 CLOUD_BASE_TEX="$ROOT_DIR/assets/clouds-base.png"
+LOADING="$ROOT_DIR/assets/loading.js"
+LOADING_MARKUP="$ROOT_DIR/assets/loading.html"
+LOADING_STYLE="$ROOT_DIR/assets/loading.css"
+SWA_CONFIG="$ROOT_DIR/assets/staticwebapp.config.json"
 INDEX="$VIEWER_DIR/index.html"
 SCRIPT="$VIEWER_DIR/MinedMap.js"
 INFO="$VIEWER_DIR/data/info.json"
@@ -32,6 +36,10 @@ TITLE="Minecraft with 329"
 [[ -f "$CLOUDS" ]] || { echo "Cloud overlay definitions not found: $CLOUDS" >&2; exit 1; }
 [[ -f "$CLOUD_STYLE" ]] || { echo "Cloud stylesheet not found: $CLOUD_STYLE" >&2; exit 1; }
 [[ -f "$CLOUD_BASE_TEX" ]] || { echo "Cloud base texture not found: $CLOUD_BASE_TEX" >&2; exit 1; }
+[[ -f "$LOADING" ]] || { echo "Loading controller not found: $LOADING" >&2; exit 1; }
+[[ -f "$LOADING_MARKUP" ]] || { echo "Loading splash markup not found: $LOADING_MARKUP" >&2; exit 1; }
+[[ -f "$LOADING_STYLE" ]] || { echo "Loading stylesheet not found: $LOADING_STYLE" >&2; exit 1; }
+[[ -f "$SWA_CONFIG" ]] || { echo "Static Web Apps configuration not found: $SWA_CONFIG" >&2; exit 1; }
 
 # Install the custom favicon alongside the viewer and remove any stale variants.
 cp -f "$ASSET" "$VIEWER_DIR/favicon.ico"
@@ -59,6 +67,42 @@ cp -f "$CLOUD_BASE_TEX" "$VIEWER_DIR/clouds-base.png"
 rm -f "$VIEWER_DIR/clouds-wisp.png"
 sed -i '/href="clouds.css"/d' "$INDEX"
 sed -i '/href="regions.css"/a\    <link rel="stylesheet" href="clouds.css" />' "$INDEX"
+
+# Install the cold-load splash stylesheet last, so its panel rules win, and link
+# it from the head: a linked stylesheet is render-blocking, which is what makes
+# the splash styled on the very first paint instead of flashing unstyled.
+cp -f "$LOADING_STYLE" "$VIEWER_DIR/loading.css"
+sed -i '/href="loading.css"/d' "$INDEX"
+sed -i '/href="clouds.css"/a\    <link rel="stylesheet" href="loading.css" />' "$INDEX"
+
+# Let the document (and with it the splash) paint without waiting on 200 KB of
+# blocking JavaScript. Deferred scripts still run in order, and always before
+# DOMContentLoaded, so the stock inline bootstrap moves into that event —
+# without the move, the non-deferred call would run before MinedMap.js defines
+# createMap. Idempotent: every substitution stops matching once applied.
+sed -i 's#<script src="leaflet-1\.9\.4/leaflet\.js"></script>#<script defer src="leaflet-1.9.4/leaflet.js"></script>#' "$INDEX"
+sed -i 's#<script src="MinedMap\.js"></script>#<script defer src="MinedMap.js"></script>#' "$INDEX"
+sed -i 's#^\( *\)createMap();$#\1window.addEventListener("DOMContentLoaded", function () { createMap(); });#' "$INDEX"
+
+# Start the info.json request while the deferred scripts are still in flight
+# rather than after MinedMap.js executes. This works only together with the
+# no-store -> no-cache change below: a no-store request bypasses the preload
+# cache, so the preloaded response would be fetched a second time.
+sed -i '/rel="preload"/d' "$INDEX"
+sed -i '/rel="icon"/a\    <link rel="preload" href="data/info.json" as="fetch" />' "$INDEX"
+
+# Add the loading splash itself. It is static markup in the document rather than
+# JavaScript-built so it is on screen in the first frame; the controller injected
+# into MinedMap.js below takes it from there. Remove a prior injection first so
+# rerunning this script does not stack splashes.
+sed -i '/<!-- BEGIN 329 LOADING -->/,/<!-- END 329 LOADING -->/d' "$INDEX"
+sed -i "/<div id=\"map\"><\/div>/r $LOADING_MARKUP" "$INDEX"
+
+# Publish the Static Web Apps route configuration, which lets a returning
+# visitor reuse the rendered tiles instead of downloading them again. The one
+# hour window is well inside the roughly daily render cadence; info.json stays
+# uncached so a new render is always noticed.
+cp -f "$SWA_CONFIG" "$VIEWER_DIR/staticwebapp.config.json"
 
 # Repaint the stock dark-grey void (body + .leaflet-container background) with
 # the solid cloud tone, so unexplored areas read as dense cloud cover even when
@@ -100,6 +144,18 @@ sed -i "s|__HOME_API_URL__|${HOME_API_URL:-}|g" "$SCRIPT"
 # the other overlays. Remove any prior injection so reruns do not duplicate it.
 sed -i '/\/\/ BEGIN 329 CLOUDS/,/\/\/ END 329 CLOUDS/d' "$SCRIPT"
 sed -i "/\/\/ END 329 HOMES/r $CLOUDS" "$SCRIPT"
+
+# Add the loading splash controller and the overlay status pill. It shares the
+# `const overlayMaps = {};` anchor with the regions block above and is injected
+# after it, which lands it *above* that block — the overlay loaders call into
+# `mapLoading`, so it has to be initialized before any of them run.
+sed -i '/\/\/ BEGIN 329 LOADING/,/\/\/ END 329 LOADING/d' "$SCRIPT"
+sed -i "/const overlayMaps = {};/r $LOADING" "$SCRIPT"
+
+# Let the info.json response be reused from the preload in index.html. no-cache
+# still revalidates with the server on every load, so the viewer never shows a
+# stale render; no-store would additionally forbid reusing the preloaded copy.
+sed -i "s#fetch('data/info.json', {cache: 'no-store'})#fetch('data/info.json', {cache: 'no-cache'})#" "$SCRIPT"
 
 # Show the initial map center before the visitor moves a mouse or touches the map.
 sed -i '/\/\/ BEGIN 329 COORDINATES/,/\/\/ END 329 COORDINATES/d' "$SCRIPT"

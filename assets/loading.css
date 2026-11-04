@@ -1,0 +1,170 @@
+/* Cold-load feedback for the published viewer.
+
+   A first visit has to download leaflet.js and MinedMap.js, round-trip
+   data/info.json, and only then pull a screenful of terrain tiles. Leaflet
+   paints nothing until all of that lands, so the page reads as a blank sheet of
+   cloud tone for the whole stretch. The splash fills it: the markup is injected
+   straight into index.html by scripts/brand-viewer.sh rather than built in
+   JavaScript, and this stylesheet is linked ahead of the deferred scripts, so
+   the splash is styled and on screen in the first frame.
+
+   The splash covers the terrain load only. The Discord overlays are fetched
+   separately from the API, where a cold Azure Function can add seconds, and they
+   must never hold the map back — those report into the small bottom-left status
+   pill instead, so the map stays interactive while regions, points of interest,
+   and homes are still on their way. */
+
+#map-loading {
+  /* The splash sits outside .leaflet-container, where regions.css declares the
+     panel language, so repeat the tokens here. Keep the two in sync. */
+  --map-ui-color: #d58c2b;
+  --map-ui-background: rgba(20, 18, 16, 0.92);
+  --map-ui-text: #fffdf2;
+  --map-ui-shadow: 3px 3px 0 rgba(0, 0, 0, 0.72);
+  --map-ui-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  position: fixed;
+  z-index: 3000;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Same tone as the map background, so the hand-off is seamless. */
+  background: #e6edfa;
+  font-family: ui-monospace, "Cascadia Mono", "DejaVu Sans Mono", "Courier New", monospace;
+  transition: opacity 0.45s ease;
+}
+
+#map-loading.map-loading-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The same 512px cloud texture the fog-of-war overlay uses, so the splash is
+   already the cloudscape the unexplored map is about to show. Drifting the
+   layer by exactly one tile keeps the loop invisible; the extra 512px of width
+   covers the ground the transform gives up on the drift side. */
+.map-loading-sky {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% + 512px);
+  background-image: url(clouds-base.png);
+  background-repeat: repeat;
+  background-size: 512px 512px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: map-loading-drift 90s linear infinite;
+  will-change: transform;
+}
+
+@keyframes map-loading-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-512px, 0, 0); }
+}
+
+.map-loading-panel {
+  position: relative;
+  display: grid;
+  gap: 9px;
+  justify-items: center;
+  width: 236px;
+  padding: 14px 18px 15px;
+  border: 2px solid var(--map-ui-color);
+  background: var(--map-ui-background);
+  box-shadow: var(--map-ui-shadow), var(--map-ui-inset);
+  color: var(--map-ui-text);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
+}
+
+.map-loading-track {
+  width: 100%;
+  height: 10px;
+  border: 2px solid rgba(213, 140, 43, 0.65);
+  background: rgba(255, 253, 242, 0.08);
+  overflow: hidden;
+}
+
+.map-loading-fill {
+  width: 0;
+  height: 100%;
+  background: var(--map-ui-color);
+  transition: width 0.2s steps(4);
+}
+
+/* Until the first tile request is counted there is nothing to measure, so the
+   bar sweeps instead of claiming a percentage. 40% wide, so travelling to 150%
+   of its own width carries it exactly off the right edge. */
+.map-loading-indeterminate .map-loading-fill {
+  width: 40%;
+  transition: none;
+  animation: map-loading-sweep 1.2s steps(10) infinite;
+}
+
+@keyframes map-loading-sweep {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(150%); }
+}
+
+/* Reserve the row so the panel does not jump when the tile count appears. */
+.map-loading-count {
+  min-height: 1.3em;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+}
+
+/* Overlay status pill: shown only while an overlay's first API load is in
+   flight, over the map the visitor can already pan and zoom. */
+.leaflet-container .map-data-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  border: 2px solid var(--map-ui-color);
+  background: var(--map-ui-background);
+  box-shadow: var(--map-ui-shadow), var(--map-ui-inset);
+  color: var(--map-ui-text);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
+}
+
+.leaflet-container .map-data-status-hidden {
+  display: none;
+}
+
+.leaflet-container .map-data-spinner {
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--map-ui-color);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  animation: map-data-spin 0.9s steps(8) infinite;
+}
+
+@keyframes map-data-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-loading-sky,
+  .map-loading-indeterminate .map-loading-fill,
+  .leaflet-container .map-data-spinner {
+    animation: none;
+  }
+}

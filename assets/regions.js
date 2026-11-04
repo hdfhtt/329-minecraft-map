@@ -276,6 +276,7 @@
 
 		const loadRegions = function() {
 			if (!regionApiUrl) return;
+			if (typeof mapLoading !== 'undefined') mapLoading.begin('Regions');
 			fetch(regionApiUrl).then(function(response) {
 				if (!response.ok) throw new Error(`Region API returned ${response.status}`);
 				return response.json();
@@ -293,6 +294,8 @@
 				markerColorSubscribers.forEach(function(subscriber) { subscriber(); });
 			}).catch(function(error) {
 				console.warn('Unable to load map regions.', error);
+			}).finally(function() {
+				if (typeof mapLoading !== 'undefined') mapLoading.end('Regions');
 			});
 		};
 

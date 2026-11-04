@@ -108,7 +108,9 @@
 			gamertag.className = 'poi-panel-author-name';
 			gamertag.textContent = poi.createdByGamertag || 'Unknown';
 
-			author.append(head, label, gamertag);
+			// Label first: it spans both grid columns, leaving the head and the
+			// gamertag to share the row beneath it.
+			author.append(label, head, gamertag);
 			panel.append(title, coordinates, author);
 			return panel;
 		};

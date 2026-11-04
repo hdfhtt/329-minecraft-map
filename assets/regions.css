@@ -634,8 +634,15 @@
 
 /* POI hover panel: type glyph + name, the coordinate used to address the POI in
    Discord, and the creator's Minecraft head. Stacked rows, so this undoes the
-   single-line nowrap the shared marker tooltip sets. */
+   single-line nowrap the shared marker tooltip sets.
+
+   Leaflet tooltips are absolutely positioned with no width, inside panes that
+   also have none, so available width collapses and every row would otherwise
+   be squeezed to its min-content. max-content sizes the panel to its widest
+   unwrapped row instead, and max-width keeps a long gamertag from running away. */
 .leaflet-container .leaflet-tooltip.poi-tooltip {
+  width: max-content;
+  max-width: 200px;
   padding: 6px 8px;
   white-space: normal;
 }
@@ -678,13 +685,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* "Added by" sits on its own line above the head and gamertag, so the tag gets
+   a full row rather than competing with them for width. The rule takes the
+   region colour like the panel border, and falls back to the theme accent
+   outside every region. */
 .poi-panel-author {
-  display: flex;
+  display: grid;
+  /* minmax(0, 1fr), not 1fr: a fr track's automatic minimum is its min-content
+     width, so an unbroken 32-character gamertag would push the panel wider
+     than its max-width instead of wrapping. */
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 5px;
+  gap: 3px 5px;
   margin-top: 1px;
   padding-top: 4px;
-  border-top: 1px solid rgba(213, 140, 43, 0.65);
+  border-top: 1px solid var(--marker-color, var(--map-ui-color));
   width: 100%;
 }
 
@@ -702,6 +717,7 @@
 }
 
 .poi-panel-author-label {
+  grid-column: 1 / -1;
   color: rgba(255, 253, 242, 0.66);
   font-size: 9px;
   letter-spacing: 0.03em;
@@ -709,10 +725,14 @@
   text-transform: uppercase;
 }
 
+/* break-word, never anywhere: `anywhere` also shrinks the element's min-content
+   width to a single character, which is what let the gamertag collapse into a
+   vertical stack. Gamertags may contain spaces, so this wraps at the space and
+   only splits a word when one cannot fit at all. */
 .poi-panel-author-name {
   font-size: 10px;
   letter-spacing: 0.03em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .leaflet-container a.leaflet-popup-close-button,

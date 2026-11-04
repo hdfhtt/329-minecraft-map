@@ -113,20 +113,23 @@
   outline-offset: 2px;
 }
 
+/* Points of interest: a filled glyph per POI type, matched to the home marker's
+   size. The rim is lighter than the home marker's because these glyphs carry
+   interior detail (windows, pillars, facets) that a 2px rim closes up. */
 .leaflet-container .poi-marker-icon {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   background: transparent;
 }
 
 .leaflet-container .poi-marker-svg {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   overflow: visible;
   color: var(--marker-color, var(--map-ui-color));
   stroke: #ffffff;
-  stroke-width: 2;
+  stroke-width: 1.5;
   stroke-linejoin: round;
   paint-order: stroke;
   filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.72));
